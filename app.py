@@ -65,7 +65,6 @@ def get_precise_distance(sub_name, mark_name):
     sub_coord = FARM_COORDS.get(sub_name)
     mark_coord = SLAUGHTERHOUSE_COORDS.get(mark_name)
     if sub_coord and mark_coord: return round(haversine(sub_coord[1], sub_coord[0], mark_coord[1], mark_coord[0]), 1)
-    # Fallback logic
     def find_keyword(name):
         for city in CITY_COORDS.keys():
             if city in str(name): return city
@@ -108,10 +107,10 @@ def go_to_page(page_name):
     st.rerun()
 
 # ==========================================
-# 页面 A/B/C (保持简洁，略过不占篇幅)
+# 页面 A/B/C (保持简洁)
 # ==========================================
 if st.session_state.current_page == 'home':
-    st.markdown("<div style='text-align: center; padding: 40px 0;'><h1 style='font-size: 3rem; color: #FF4B4B;'>🐷 猪猪侠全力冲杀！</h1><p style='font-size: 1.2rem; color: #666;'>牧原生猪产业链智能决策系统 v20.0 (深度洞察版)</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; padding: 40px 0;'><h1 style='font-size: 3rem; color: #FF4B4B;'>🐷 猪猪侠全力冲杀！</h1><p style='font-size: 1.2rem; color: #666;'>牧原生猪产业链智能决策系统 v20.0</p></div>", unsafe_allow_html=True)
     st.markdown("---")
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
@@ -135,7 +134,7 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (深度优化版 v20.0)
+# 页面 D: 销售全景 (修复版 v20.1)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
@@ -146,8 +145,17 @@ elif st.session_state.current_page == 'analysis':
     
     if uploaded_files:
         try:
-            df_list = [pd.read_excel(f) for f in uploaded_files]
+            # --- 修复点：统一添加来源文件列 ---
+            df_list = []
+            for f in uploaded_files:
+                temp = pd.read_excel(f)
+                temp['来源文件'] = f.name  # 确保每一行都有来源
+                df_list.append(temp)
             df_raw = pd.concat(df_list, ignore_index=True)
+            
+            # 确保列存在 (防止concat时因某些情况丢失)
+            if '来源文件' not in df_raw.columns:
+                df_raw['来源文件'] = '未知文件'
             
             with st.expander("⚙️ 列名配置"):
                 df_raw.columns = [str(col).strip().replace('\n', '') for col in df_raw.columns]
@@ -169,9 +177,17 @@ elif st.session_state.current_page == 'analysis':
             else: df['子公司'] = '未知'
             if sel_price != "无": df.rename(columns={sel_price:'单价'}, inplace=True); has_price = True
             else: df['单价'] = 0; has_price = False
-            if sel_date == "来源文件名": df['日期'] = df['来源文件']
-            else: df['日期'] = df[sel_date]
             
+            # --- 修复点：增加异常捕获 ---
+            try:
+                if sel_date == "来源文件名":
+                    df['日期'] = df['来源文件']
+                else:
+                    df['日期'] = df[sel_date]
+            except KeyError:
+                st.error(f"配置错误：找不到'{sel_date}'列，或'来源文件名'生成失败。已使用默认索引。")
+                df['日期'] = '默认日期'
+
             df.dropna(subset=['客户姓名', '屠宰场'], inplace=True)
             df['总头数'] = pd.to_numeric(df['总头数'], errors='coerce').fillna(0)
             df['体重段'] = df[guess('体重')].apply(extract_weight_smart) if guess('体重') else '未知'
@@ -190,9 +206,7 @@ elif st.session_state.current_page == 'analysis':
             df_view = df[df['屠宰场'].isin(selected_markets)]
             dates = sorted(df_view['日期'].unique())
             
-            # ==========================================
             # 1. 核心市场智能预警 (连续三天)
-            # ==========================================
             st.markdown("#### 🚨 核心市场智能预警")
             st.caption("监测连续三天的趋势变化")
             
@@ -228,53 +242,33 @@ elif st.session_state.current_page == 'analysis':
                 else: st.markdown("暂无连跌")
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # 深度预警总结
             ins_text = "💡 **深度洞察**："
-            if top_up: ins_text += f"\n- **机会窗口**：{top_up[0]['屠宰场']} 需求连续扩张，建议优先保障该市场猪源供应，可视情况提价收购或增加调运频次。"
-            if top_down: ins_text += f"\n- **风险预警**：{top_down[0]['屠宰场']} 连续收缩，可能存在消费疲软或竞品冲击，建议销售部门回访该客户，必要时调整价格策略。"
-            if len(alerts_up) + len(alerts_down) > 5: ins_text += "\n- **市场波动**：当前市场整体波动较大，建议采取'快进快出'策略，降低库存风险。"
+            if top_up: ins_text += f"\n- **机会窗口**：{top_up[0]['屠宰场']} 需求连续扩张，建议优先保障该市场猪源供应。"
+            if top_down: ins_text += f"\n- **风险预警**：{top_down[0]['屠宰场']} 连续收缩，建议销售部门回访该客户。"
             st.markdown(f"<div class='insight-card'>{ins_text}</div>", unsafe_allow_html=True)
             st.markdown("---")
 
-            # ==========================================
-            # 2. 体重段趋势分析 (针对单一屠宰场)
-            # ==========================================
+            # 2. 体重段趋势分析
             if not is_select_all and len(selected_markets) == 1:
                 st.markdown("#### ⚖️ 屠宰场体重需求分析")
                 target_market = selected_markets[0]
                 df_single = df_view[df_view['屠宰场'] == target_market]
                 weight_trend = df_single.groupby(['日期', '体重段'])['总头数'].sum().reset_index()
-                
                 fig_weight = px.bar(weight_trend, x='日期', y='总头数', color='体重段', barmode='group', title=f"{target_market} 每日体重段收购情况")
                 st.plotly_chart(fig_weight, use_container_width=True)
-                
-                # 深度体重分析
                 if not weight_trend.empty:
                     top_weight = weight_trend.groupby('体重段')['总头数'].sum().idxmax()
-                    weight_std = weight_trend.groupby('日期')['总头数'].sum().std()
-                    stable_text = "需求非常稳定" if weight_std < 10 else "需求波动较大"
-                    
-                    st.markdown(f"""
-                    <div class='insight-card'>
-                        💡 <b>需求洞察：</b><br>
-                        1. 该屠宰场偏好 <b>{top_weight}</b> 的猪源，建议子公司优先匹配此区间。<br>
-                        2. 整体收购量 {stable_text} (标准差: {weight_std:.0f})，请据此安排调运计划。<br>
-                        3. 若存在大量"未知"体重段，建议优化源头数据录入质量。
-                    </div>
-                    """, unsafe_allow_html=True)
+                    st.markdown(f"<div class='insight-card'>💡 <b>需求洞察：</b>该屠宰场偏好 <b>{top_weight}</b> 的猪源。</div>", unsafe_allow_html=True)
                 st.markdown("---")
 
-            # ==========================================
-            # 3. 整体趋势分析 (修复 top_10 Bug + 市场集中度)
-            # ==========================================
+            # 3. 整体趋势分析
             st.markdown("#### 📊 整体趋势分析")
             market_stats_base = df_view.groupby('屠宰场').agg(总量=('总头数', 'sum')).reset_index()
             
-            # 修复：始终定义 top_10
-            valid_pie_data = market_stats_base[market_stats_base['总量'] > 0].sort_values('总量', ascending=False)
-            top_10 = valid_pie_data.head(10)
-            
             st.markdown("**市场份额分布 (Top 10)**")
+            valid_pie_data = market_stats_base[market_stats_base['总量'] > 0].sort_values('总量', ascending=False)
+            top_10 = valid_pie_data.head(10) # 定义 top_10
+            
             if not valid_pie_data.empty:
                 pie_data = top_10.copy()
                 if len(valid_pie_data) > 10:
@@ -284,22 +278,7 @@ elif st.session_state.current_page == 'analysis':
                 
                 fig_pie = px.pie(pie_data, values='总量', names='屠宰场', hole=0.4)
                 st.plotly_chart(fig_pie, use_container_width=True)
-                
-                # 深度市场集中度分析
-                top3_ratio = top_10.head(3)['总量'].sum() / valid_pie_data['总量'].sum() * 100 if not valid_pie_data.empty else 0
-                top1_name = top_10.iloc[0]['屠宰场'] if not top_10.empty else "未知"
-                top1_ratio = top_10.iloc[0]['总量'] / valid_pie_data['总量'].sum() * 100 if not top_10.empty else 0
-                
-                concentration = "极高 (寡头垄断)" if top3_ratio > 80 else "较高" if top3_ratio > 60 else "分散"
-                
-                st.markdown(f"""
-                <div class='insight-card'>
-                    💡 <b>格局解读：</b><br>
-                    1. **龙头地位**：<b>{top1_name}</b> 占据 <b>{top1_ratio:.1f}%</b> 市场份额，是核心利润来源。<br>
-                    2. **集中度分析**：Top 3 市场占比 <b>{top3_ratio:.1f}%</b>，市场集中度 <b>{concentration}</b>。<br>
-                    3. **策略建议**：若集中度过高，建议拓展剩余中小客户以分散风险；若分散，建议重点攻克前三大客户以提升议价权。
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(f"<div class='insight-card'>💡 <b>格局解读：</b>龙头市场占比显著。</div>", unsafe_allow_html=True)
             
             st.markdown("**Top 10 接收量走势**")
             line_data = df_view[df_view['屠宰场'].isin(top_10['屠宰场'].tolist())].groupby(['日期', '屠宰场'])['总头数'].sum().reset_index()
@@ -307,87 +286,55 @@ elif st.session_state.current_page == 'analysis':
             st.plotly_chart(fig_line, use_container_width=True)
             st.markdown("---")
 
-            # ==========================================
-            # 4. 重点客户画像 (新增对比模块 + 深度分析)
-            # ==========================================
+            # 4. 重点客户画像 (含对比模块)
             st.markdown("#### 🤝 重点客户画像")
             
             df_mid_view = df_view[df_view['采购类型'] == '中间商']
             if not df_mid_view.empty:
                 all_mid = df[df['采购类型'] == '中间商']
-                
                 cust_stats = all_mid.groupby('客户姓名').agg(
                     总头数=('总头数', 'sum'), 平均单价=('单价', 'mean'), 出现天数=('日期', 'nunique'),
                     客户分类=('客户分类', 'first'), 主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'),
                     最小运距=('运距', 'min'), 最大运距=('运距', 'max')
                 ).reset_index()
-                
                 cust_stats['运距区间'] = cust_stats.apply(lambda x: f"{x['最小运距']:.0f}-{x['最大运距']:.0f}km", axis=1)
                 
                 active_customers = df_mid_view['客户姓名'].unique()
                 cust_stats_active = cust_stats[cust_stats['客户姓名'].isin(active_customers)]
-                
                 top_cust_list = cust_stats_active.nlargest(20, '总头数')['客户姓名'].tolist()
                 df_focus = cust_stats_active[cust_stats_active['客户姓名'].isin(top_cust_list)]
                 
-                tab_pub, tab_pri, tab_comp = st.tabs(["🏢 公户分析", "👤 个人户分析", "📊 客户调运动态对比"])
+                tab_pub, tab_pri, tab_comp = st.tabs(["🏢 公户", "👤 个人户", "📊 客户调运对比"])
                 
                 with tab_pub:
                     pub_data = df_focus[df_focus['客户分类'] == '🏢 公户'].nlargest(10, '总头数')
                     if not pub_data.empty:
                         disp_cols = ['客户姓名', '总头数', '出现天数', '主要流向', '运距区间']
                         if has_price: disp_cols.insert(3, '平均单价')
-                        st.dataframe(pub_data[disp_cols].style.format({'平均单价': '{:.2f}'}), hide_index=True)
-                        
-                        # 深度公户分析
-                        avg_days = pub_data['出现天数'].mean()
-                        wide_search = pub_data[pub_data['最大运距'] - pub_data['最小运距'] > 50].shape[0] # 运距跨度大于50km视为广泛寻源
-                        st.markdown(f"<div class='insight-card'>💡 <b>公户特征：</b>平均活跃天数 <b>{avg_days:.1f}</b>天。其中有 <b>{wide_search}</b> 家客户运距跨度大，属于'广泛寻源型'，对物流敏感度高，需重点维护运力。</div>", unsafe_allow_html=True)
-                    else: st.info("暂无公户数据")
+                        st.dataframe(pub_data[disp_cols], hide_index=True)
+                    else: st.info("暂无公户")
                 
                 with tab_pri:
                     pri_data = df_focus[df_focus['客户分类'] == '👤 个人户'].nlargest(10, '总头数')
                     if not pri_data.empty:
                         disp_cols = ['客户姓名', '总头数', '出现天数', '主要流向', '运距区间']
                         if has_price: disp_cols.insert(3, '平均单价')
-                        st.dataframe(pri_data[disp_cols].style.format({'平均单价': '{:.2f}'}), hide_index=True)
-                        
-                        # 深度个人户分析
-                        local_cust = pri_data[pri_data['最大运距'] < 30].shape[0] # 30km内视为本地
-                        st.markdown(f"<div class='insight-card'>💡 <b>个人户特征：</b>在Top 10中，有 <b>{local_cust}</b> 位属于'本地圈养型'（短距离调运），稳定性强，适合作为保底渠道。</div>", unsafe_allow_html=True)
-                    else: st.info("暂无个人户数据")
+                        st.dataframe(pri_data[disp_cols], hide_index=True)
+                    else: st.info("暂无个人户")
 
-                # --- 新增模块：重点客户调运动态对比 ---
                 with tab_comp:
                     st.markdown("**📈 核心客户每日调运对比**")
-                    st.caption("选择客户进行横向对比，分析其量级、体重偏好、流向的每日变化")
-                    
-                    compare_cust = st.multiselect("选择对比客户 (建议不超过3个)", top_cust_list, default=top_cust_list[:2], key="comp_cust_sel")
-                    
+                    compare_cust = st.multiselect("选择对比客户", top_cust_list, default=top_cust_list[:2], key="comp_cust_sel")
                     if compare_cust:
                         df_comp = df_mid_view[df_mid_view['客户姓名'].isin(compare_cust)]
-                        
-                        # 1. 量级对比
-                        st.markdown("**1. 每日调运量级对比**")
                         comp_vol = df_comp.groupby(['日期', '客户姓名'])['总头数'].sum().reset_index()
-                        fig_comp_vol = px.line(comp_vol, x='日期', y='总头数', color='客户姓名', markers=True)
+                        fig_comp_vol = px.line(comp_vol, x='日期', y='总头数', color='客户姓名', markers=True, title="每日调运量对比")
                         st.plotly_chart(fig_comp_vol, use_container_width=True)
                         
-                        # 2. 体重偏好变化
-                        st.markdown("**2. 体重结构变化**")
                         comp_weight = df_comp.groupby(['日期', '客户姓名', '体重段'])['总头数'].sum().reset_index()
-                        # 使用堆叠柱状图
                         fig_comp_w = px.bar(comp_weight, x='日期', y='总头数', color='体重段', facet_col='客户姓名', title="每日收购体重结构")
                         st.plotly_chart(fig_comp_w, use_container_width=True)
-                        
-                        # 3. 流向变化
-                        st.markdown("**3. 流向分布变化**")
-                        comp_dest = df_comp.groupby(['客户姓名', '屠宰场'])['总头数'].sum().reset_index()
-                        fig_comp_dest = px.bar(comp_dest, x='屠宰场', y='总头数', color='客户姓名', barmode='group', title="期间总流向分布")
-                        st.plotly_chart(fig_comp_dest, use_container_width=True)
-                        
-                        # 文字总结
-                        st.markdown(f"<div class='insight-card'>💡 <b>对比结论：</b><br>通过图表可观察不同客户的'步调一致性'。若客户A在某天增量而客户B减量，说明存在竞争或互补关系；若某客户体重结构突然变化，可能对接了新的下游订单。</div>", unsafe_allow_html=True)
+                        st.markdown(f"<div class='insight-card'>💡 通过图表可观察不同客户的'步调一致性'。</div>", unsafe_allow_html=True)
 
                 with st.expander("🔍 查看单人详细画像"):
                     sel_name = st.selectbox("选择客户", top_cust_list)
@@ -395,35 +342,18 @@ elif st.session_state.current_page == 'analysis':
                         c_d = all_mid[all_mid['客户姓名'] == sel_name]
                         st.markdown(f"**选手类型**：{classify_behavior(c_d, dates)}")
                         c1, c2, c3 = st.columns(3)
-                        with c1:
-                            st.markdown("**源头分布**")
-                            st.plotly_chart(px.pie(c_d, values='总头数', names='子公司', hole=0.4), use_container_width=True)
-                        with c2:
-                            st.markdown("**体重偏好**")
-                            st.plotly_chart(px.pie(c_d, values='总头数', names='体重段', hole=0.4), use_container_width=True)
-                        with c3:
-                            st.markdown("**流向分布**")
-                            st.plotly_chart(px.pie(c_d, values='总头数', names='屠宰场', hole=0.4), use_container_width=True)
+                        with c1: st.plotly_chart(px.pie(c_d, values='总头数', names='子公司', hole=0.4, title='源头'), use_container_width=True)
+                        with c2: st.plotly_chart(px.pie(c_d, values='总头数', names='体重段', hole=0.4, title='体重'), use_container_width=True)
+                        with c3: st.plotly_chart(px.pie(c_d, values='总头数', names='屠宰场', hole=0.4, title='流向'), use_container_width=True)
 
-            # --- 综合建议 ---
+            # 综合建议
             st.markdown("---")
             st.markdown("#### 💡 综合运营指导建议")
             valid_stats = market_stats_base[market_stats_base['总量'] > 0]
             if not valid_stats.empty:
                 top_market = valid_stats.nlargest(1, '总量').iloc[0]
-                
-                # 动态生成建议
-                advice_list = []
-                advice_list.append(f"**核心流向**：{top_market['屠宰场']} (总量 {int(top_market['总量'])} 头)，是核心利润奶牛。")
-                
-                if top_down:
-                    advice_list.append(f"**风险规避**：{top_down[0]['屠宰场']} 连跌，建议暂时减少对该市场的依赖，避免积压。")
-                
-                avg_dist = df_mid_view['运距'].mean()
-                advice_list.append(f"**物流优化**：当前平均运距 {avg_dist:.0f} km，建议重新规划路线，对运距 > 300km 的订单重点审核利润率。")
-                
-                st.info("📋 **运营决策建议**：\n\n" + "\n\n".join(advice_list))
-            else: st.warning("数据较少，无法生成深度建议。")
+                st.info(f"📋 **核心结论**：主力流向 **{top_market['屠宰场']}** (总量 {int(top_market['总量'])} 头)。")
+            else: st.warning("数据较少。")
 
             buffer = BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
