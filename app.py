@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from io import BytesIO
 import os
 import re
@@ -98,13 +99,31 @@ def get_precise_distance_debug(sub_name, mark_name):
     dist = calc_dist(sub_coord, mark_coord)
     return dist, sub_match, mark_match
 
-def extract_weight_smart(text):
-    if pd.isna(text): return "未知"
-    matches = re.findall(r'(\d+)-(\d+)', str(text))
+def extract_weight_smart_v2(text):
+    """
+    v24.0 优化版体重提取
+    针对格式: "140肥猪&小后备育肥猪105-125"
+    逻辑: 查找所有 数字-数字 模式，取最后一个作为体重段
+    """
+    if pd.isna(text): return "未知", 0
+    
+    text = str(text)
+    # 正则查找所有 x-y 格式
+    matches = re.findall(r'(\d+)-(\d+)', text)
+    
     if matches:
-        valid = [(int(m[0]), int(m[1])) for m in matches if int(m[0]) > 90]
-        if valid: return f"{valid[-1][0]}-{valid[-1][1]}kg"
-    return "未知"
+        # 过滤掉不符合体重常识的区间 (比如 1-2 这种章节号)，假设体重至少 >50kg
+        valid_matches = [(int(m[0]), int(m[1])) for m in matches if int(m[0]) > 50]
+        
+        if valid_matches:
+            # 取最后一个有效的匹配
+            last_match = valid_matches[-1]
+            low, high = last_match
+            # 计算中值用于后续重量计算
+            avg_weight = (low + high) / 2
+            return f"{low}-{high}kg", avg_weight
+            
+    return "未知", 110 # 默认给个110kg中值
 
 def classify_customer(name):
     if pd.isna(name): return '未知'
@@ -112,16 +131,11 @@ def classify_customer(name):
     return '👤 个人户'
 
 def extract_date_from_filename(filename):
-    """尝试从文件名提取日期，支持 20231027.xlsx 或 2023-10-27.xlsx"""
     basename = os.path.splitext(os.path.basename(filename))[0]
-    # 尝试匹配 YYYYMMDD
     match = re.search(r'(\d{4})(\d{2})(\d{2})', basename)
-    if match:
-        return f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
-    # 尝试匹配 YYYY-MM-DD
+    if match: return f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
     match = re.search(r'(\d{4}-\d{2}-\d{2})', basename)
-    if match:
-        return match.group(1)
+    if match: return match.group(1)
     return basename
 
 # --- 5. 页面状态管理 ---
@@ -136,7 +150,7 @@ def go_to_page(page_name):
 # 页面 A: 官网首页
 # ==========================================
 if st.session_state.current_page == 'home':
-    st.markdown("<div style='text-align: center; padding: 40px 0;'><h1 style='font-size: 3rem; color: #FF4B4B;'>🐷 猪猪侠全力冲杀！</h1><p style='font-size: 1.2rem; color: #666;'>牧原生猪产业链智能决策系统 v23.0</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; padding: 40px 0;'><h1 style='font-size: 3rem; color: #FF4B4B;'>🐷 猪猪侠全力冲杀！</h1><p style='font-size: 1.2rem; color: #666;'>牧原生猪产业链智能决策系统 v24.0</p></div>", unsafe_allow_html=True)
     st.markdown("---")
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
@@ -150,26 +164,26 @@ if st.session_state.current_page == 'home':
         if st.button("进入", key="btn_home_3"): go_to_page('analysis')
 
 # ==========================================
-# 页面 B: 结算定价 (深度重构版 v23.0)
+# 页面 B: 结算定价 (逻辑修正版 v24.0)
 # ==========================================
 elif st.session_state.current_page == 'pricing':
     st.markdown("<div class='page-header'><h1>🛒 结算定价中心</h1></div>", unsafe_allow_html=True)
     if st.button("⬅️ 返回"): go_to_page('home')
     
     st.markdown("### 📤 数据上传")
-    st.caption("请上传多日数据文件，系统将自动从文件名提取日期（如 20231027.xlsx）")
+    st.caption("请上传包含：单价、预估成本、体重段/等级、头数、客户、屠宰场等信息的明细表")
     
-    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v23")
+    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v24")
     
     if pricing_files:
         df_list = []
         for f in pricing_files:
             try:
                 temp = pd.read_excel(f)
-                # 优先从文件名提取日期
-                extracted_date = extract_date_from_filename(f.name)
+                temp['来源文件'] = f.name
+                # 日期提取
                 if '日期' not in temp.columns:
-                    temp['日期'] = extracted_date
+                    temp['日期'] = extract_date_from_filename(f.name)
                 df_list.append(temp)
             except Exception as e:
                 st.warning(f"文件 {f.name} 读取失败: {e}")
@@ -182,35 +196,46 @@ elif st.session_state.current_page == 'pricing':
             cols = df_p.columns.tolist()
             def guess(kw): return next((c for c in cols if kw in c), None)
             
-            with st.expander("⚙️ 列名配置 (自动识别)", expanded=False):
+            with st.expander("⚙️ 列名配置", expanded=False):
                 c1, c2, c3 = st.columns(3)
                 with c1: 
                     sel_date = st.selectbox("日期", cols, index=cols.index(guess('日期')) if guess('日期') else 0)
                     sel_cust = st.selectbox("客户", cols, index=cols.index(guess('客户')) if guess('客户') else 0)
                 with c2:
                     sel_mark = st.selectbox("屠宰场", cols, index=cols.index(guess('屠宰')) if guess('屠宰') else 0)
-                    sel_farm = st.selectbox("装猪场区", cols, index=cols.index(guess('场区')) if guess('场区') else 0)
+                    sel_farm = st.selectbox("装猪场区", ["无"] + cols, index=cols.index(guess('场区'))+1 if guess('场区') else 0)
                 with c3:
-                    sel_weight = st.selectbox("体重段", cols, index=cols.index(guess('体重')) if guess('体重') else 0)
+                    sel_weight = st.selectbox("体重段/等级", ["无"] + cols, index=cols.index(guess('体重'))+1 if guess('体重') else cols.index(guess('等级'))+1 if guess('等级') else 0)
                     sel_heads = st.selectbox("头数", cols, index=cols.index(guess('头数')) if guess('头数') else 0)
                 c4, c5 = st.columns(2)
-                with c4: sel_cost = st.selectbox("预估成本", cols, index=cols.index(guess('成本')) if guess('成本') else 0)
+                with c4: sel_cost = st.selectbox("预估到场成本", cols, index=cols.index(guess('成本')) if guess('成本') else 0)
                 with c5: sel_price = st.selectbox("单价", cols, index=cols.index(guess('单价')) if guess('单价') else 0)
             
             # 重命名
-            df_p.rename(columns={
-                sel_date:'日期', sel_cust:'客户', sel_mark:'屠宰场', sel_farm:'场区', 
-                sel_weight:'体重段', sel_heads:'头数', sel_cost:'预估成本', sel_price:'单价'
-            }, inplace=True)
+            rename_map = {
+                sel_date:'日期', sel_cust:'客户', sel_mark:'屠宰场', 
+                sel_heads:'头数', sel_cost:'预估成本', sel_price:'单价'
+            }
+            if sel_farm != "无": rename_map[sel_farm] = '场区'
+            if sel_weight != "无": rename_map[sel_weight] = '体重源数据'
+            
+            df_p.rename(columns=rename_map, inplace=True)
             
             # 数据清洗
-            for c in ['日期', '客户', '屠宰场', '场区', '体重段']: df_p[c] = df_p[c].astype(str)
+            for c in ['日期', '客户', '屠宰场']: df_p[c] = df_p[c].astype(str)
             for c in ['头数', '预估成本', '单价']: df_p[c] = pd.to_numeric(df_p[c], errors='coerce').fillna(0)
             
-            # --- 筛选区域 ---
-            st.markdown("### 🎯 数据筛选与分析")
+            # --- 核心步骤：提取体重段和平均体重 ---
+            if '体重源数据' in df_p.columns:
+                # apply 函数返回两个值
+                df_p[['体重段', '平均体重']] = df_p['体重源数据'].apply(lambda x: pd.Series(extract_weight_smart_v2(x)))
+            else:
+                df_p['体重段'] = '未知'
+                df_p['平均体重'] = 110 # 默认值
             
-            # 获取唯一值列表
+            # --- 筛选区域 ---
+            st.markdown("### 🎯 数据筛选")
+            
             all_weights = sorted(df_p['体重段'].unique().tolist())
             all_customers = sorted(df_p['客户'].unique().tolist())
             all_markets = sorted(df_p['屠宰场'].unique().tolist())
@@ -231,14 +256,15 @@ elif st.session_state.current_page == 'pricing':
                 st.warning("筛选结果为空")
             else:
                 # --- 1. 结算价录入 ---
-                st.markdown("#### 💰 结算价录入")
-                st.info("请在下方表格中 **双击单元格** 输入结算价 (元/斤)，然后点击计算")
+                st.markdown("#### 💰 结算价录入 (元/公斤)")
+                st.info("请在下方表格输入 **结算价**，系统将自动计算利润空间")
                 
-                # 聚合展示
+                # 聚合
                 df_edit = df_view.groupby(['日期', '客户', '屠宰场', '体重段']).agg(
                     总头数=('头数', 'sum'),
                     平均单价=('单价', 'mean'),
-                    平均成本=('预估成本', 'mean')
+                    预估成本=('预估成本', 'mean'),
+                    平均体重=('平均体重', 'mean') # 用于算总重
                 ).reset_index().round(2)
                 
                 df_edit['结算价'] = 0.0
@@ -246,21 +272,24 @@ elif st.session_state.current_page == 'pricing':
                 edited = st.data_editor(
                     df_edit,
                     column_config={
-                        "结算价": st.column_config.NumberColumn("结算价 (元/斤)", format="%.2f", min_value=0),
-                        "平均单价": st.column_config.NumberColumn("单价 (元/斤)", format="%.2f"),
-                        "平均成本": st.column_config.NumberColumn("成本 (元/斤)", format="%.2f")
+                        "结算价": st.column_config.NumberColumn("结算价(元/kg)", format="%.2f", min_value=0),
+                        "平均单价": st.column_config.NumberColumn("单价(元/kg)", format="%.2f"),
+                        "预估成本": st.column_config.NumberColumn("预估成本(元/kg)", format="%.2f")
                     },
                     hide_index=True, use_container_width=True, num_rows="dynamic"
                 )
                 
-                if st.button("📊 计算利润与趋势", type="primary"):
-                    # 利润计算
-                    edited['利润空间'] = edited['结算价'] - edited['平均成本']
-                    edited['总利润'] = edited['利润空间'] * edited['总头数'] * 220 # 假设220斤/头
+                if st.button("📊 计算利润", type="primary"):
+                    # --- 核心计算逻辑 ---
+                    # 利润空间 = 结算价 - 预估成本
+                    edited['利润空间'] = edited['结算价'] - edited['预估成本']
+                    
+                    # 总利润 = 利润空间 * 总头数 * 平均体重
+                    edited['总利润'] = edited['利润空间'] * edited['总头数'] * edited['平均体重']
                     
                     st.markdown("#### 📈 利润分析结果")
                     
-                    # 汇总卡片
+                    # 汇总
                     t_profit = edited['总利润'].sum()
                     t_heads = edited['总头数'].sum()
                     avg_margin = edited['利润空间'].mean()
@@ -268,66 +297,58 @@ elif st.session_state.current_page == 'pricing':
                     c1, c2, c3 = st.columns(3)
                     c1.metric("总利润额", f"¥ {t_profit:,.0f}")
                     c2.metric("总交易头数", f"{int(t_heads)} 头")
-                    c3.metric("平均利润空间", f"{avg_margin:.2f} 元/斤")
+                    c3.metric("平均利润空间", f"{avg_margin:.2f} 元/kg")
                     
-                    st.dataframe(edited.style.format({'总利润': '{:.0f}'}), hide_index=True)
+                    # --- 2. 结果展示 (按需求只展示关键列) ---
+                    res_cols = ['日期', '客户', '屠宰场', '体重段', '总头数', '平均单价', '预估成本', '结算价', '利润空间', '总利润']
+                    st.dataframe(
+                        edited[res_cols].style.format({
+                            '平均单价': '{:.2f}', '预估成本': '{:.2f}', '结算价': '{:.2f}', 
+                            '利润空间': '{:.2f}', '总利润': '{:.0f}'
+                        }), 
+                        hide_index=True, use_container_width=True
+                    )
                     
-                    # --- 2. 动态图表分析 ---
+                    # --- 3. 动态图表 ---
                     st.markdown("---")
                     st.markdown("#### 📉 深度趋势分析")
                     
-                    # A. 单一客户分析：成本 vs 单价 趋势
+                    # A. 单一客户分析
                     if len(sel_c) == 1:
                         st.markdown(f"**🎯 客户专注分析：{sel_c[0]}**")
-                        st.caption("展示该客户的每日成本与单价对比，以及利润空间变化")
                         
-                        # 准备数据
                         cust_trend = edited.groupby('日期').agg(
                             平均单价=('平均单价', 'mean'),
-                            平均成本=('平均成本', 'mean'),
+                            预估成本=('预估成本', 'mean'),
                             利润空间=('利润空间', 'mean')
                         ).reset_index()
                         
-                        # 绘制双轴图
-                        from plotly.subplots import make_subplots
                         fig = make_subplots(specs=[[{"secondary_y": True}]])
-                        
-                        # 折线：单价和成本
-                        fig.add_trace(go.Scatter(x=cust_trend['日期'], y=cust_trend['平均单价'], name='单价', line=dict(color='blue', width=2)), secondary_y=False)
-                        fig.add_trace(go.Scatter(x=cust_trend['日期'], y=cust_trend['平均成本'], name='成本', line=dict(color='orange', width=2, dash='dot')), secondary_y=False)
-                        
-                        # 柱状：利润空间
+                        fig.add_trace(go.Scatter(x=cust_trend['日期'], y=cust_trend['平均单价'], name='单价', line=dict(color='blue')), secondary_y=False)
+                        fig.add_trace(go.Scatter(x=cust_trend['日期'], y=cust_trend['预估成本'], name='成本', line=dict(color='orange', dash='dot')), secondary_y=False)
                         fig.add_trace(go.Bar(x=cust_trend['日期'], y=cust_trend['利润空间'], name='利润空间', marker_color='rgba(50, 200, 50, 0.5)'), secondary_y=True)
                         
-                        fig.update_layout(title_text="单价与成本走势 (线) vs 利润空间 (柱)", hovermode="x unified")
-                        fig.update_yaxes(title_text="价格 (元/斤)", secondary_y=False)
-                        fig.update_yaxes(title_text="利润空间 (元/斤)", secondary_y=True)
-                        
+                        fig.update_layout(title_text="单价 vs 成本 (线) & 利润空间 (柱)", hovermode="x unified")
                         st.plotly_chart(fig, use_container_width=True)
                         
-                        # 结论
-                        if avg_margin > 0:
-                            st.success(f"💡 **总结**：该客户近期平均利润空间为 {avg_margin:.2f} 元/斤，整体盈利状况良好。")
-                        else:
-                            st.error(f"💡 **警告**：该客户近期平均利润空间为 {avg_margin:.2f} 元/斤，存在亏损风险，请核实成本核算。")
+                        if avg_margin > 0: st.success(f"💡 总结：该客户整体盈利，平均利润空间 {avg_margin:.2f} 元/kg。")
+                        else: st.error(f"💡 警告：该客户存在亏损风险。")
                     
-                    # B. 体重段分析：单价分布
+                    # B. 体重段分析
                     elif len(sel_w) > 0:
                         st.markdown(f"**⚖️ 体重段分析：{', '.join(sel_w)}**")
-                        st.caption("展示不同体重段的每日单价分布")
-                        
-                        # 需要重新聚合到 日期+体重段
-                        weight_trend = df_view.groupby(['日期', '体重段'])['单价'].mean().reset_index()
-                        
-                        fig_w = px.bar(weight_trend, x='日期', y='单价', color='体重段', barmode='group', title="各体重段每日单价对比")
+                        weight_trend = edited.groupby(['日期', '体重段'])['平均单价'].mean().reset_index()
+                        fig_w = px.bar(weight_trend, x='日期', y='平均单价', color='体重段', barmode='group', title="各体重段每日单价对比")
                         st.plotly_chart(fig_w, use_container_width=True)
-                        
-                        # 结论
-                        best_weight = weight_trend.loc[weight_trend['单价'].idxmax()]
-                        st.info(f"💡 **发现**：在选定期间，**{best_weight['体重段']}** 的平均单价最高，达到 {best_weight['单价']:.2f} 元/斤。")
+                    
+                    # 导出
+                    buffer = BytesIO()
+                    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+                        edited[res_cols].to_excel(writer, index=False, sheet_name='利润分析')
+                    st.download_button("📥 导出Excel", buffer, "定价分析结果.xlsx")
 
 # ==========================================
-# 页面 C: 行情预测 (略)
+# 页面 C: 行情预测
 # ==========================================
 elif st.session_state.current_page == 'trend':
     st.markdown("<div class='page-header'><h1>📈 行情预测</h1></div>", unsafe_allow_html=True)
@@ -335,18 +356,16 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (带缓存版 v23.0)
+# 页面 D: 销售全景 (带缓存版)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
     if st.button("⬅️ 返回首页", key="back_a"): go_to_page('home')
     
     # --- 缓存逻辑 ---
-    # 检查 session_state 中是否有数据
     if 'sales_df_raw' not in st.session_state:
         st.session_state['sales_df_raw'] = None
     
-    # 如果缓存中有数据，询问是否使用
     if st.session_state['sales_df_raw'] is not None:
         st.success("📂 检测到已缓存数据 (上次上传的文件)")
         c1, c2 = st.columns([1, 4])
@@ -355,15 +374,13 @@ elif st.session_state.current_page == 'analysis':
                 st.session_state['sales_df_raw'] = None
                 st.rerun()
         with c2:
-            st.caption("缓存将保留直到您手动清除或关闭浏览器，切换到其他页面不会丢失数据。")
+            st.caption("缓存将保留直到您手动清除。")
     
-    # 决定使用缓存还是新上传
     df_raw = None
     if st.session_state['sales_df_raw'] is not None:
         df_raw = st.session_state['sales_df_raw']
     else:
-        # 没有缓存，显示上传组件
-        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_upload_v23")
+        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_upload_v24")
         if uploaded_files:
             df_list = []
             for f in uploaded_files:
@@ -371,10 +388,8 @@ elif st.session_state.current_page == 'analysis':
                 temp['来源文件'] = f.name
                 df_list.append(temp)
             df_raw = pd.concat(df_list, ignore_index=True)
-            # 存入缓存
             st.session_state['sales_df_raw'] = df_raw
     
-    # --- 分析逻辑 ---
     if df_raw is not None:
         try:
             # 列名配置
@@ -402,9 +417,15 @@ elif st.session_state.current_page == 'analysis':
             
             df.dropna(subset=['客户姓名', '屠宰场'], inplace=True)
             df['总头数'] = pd.to_numeric(df['总头数'], errors='coerce').fillna(0)
-            df['体重段'] = df[guess('体重')].apply(extract_weight_smart) if guess('体重') else '未知'
             
-            # 运距计算
+            # 使用新的体重提取函数
+            if guess('体重') or guess('等级'):
+                 source_col = guess('体重') if guess('体重') else guess('等级')
+                 df[['体重段', '平均体重']] = df[source_col].apply(lambda x: pd.Series(extract_weight_smart_v2(x)))
+            else:
+                 df['体重段'] = '未知'; df['平均体重'] = 110
+            
+            # 运距
             def calc_dist_row(row): 
                 d, _, _ = get_precise_distance_debug(row.get('子公司',''), row['屠宰场'])
                 return d
@@ -415,20 +436,12 @@ elif st.session_state.current_page == 'analysis':
             
             st.success("✅ 数据解析完成")
             
-            # 筛选
-            st.markdown("#### 🏭 屠宰场筛选")
-            all_markets = df['屠宰场'].unique().tolist()
-            is_select_all = st.checkbox("全选", value=True)
-            selected_markets = all_markets if is_select_all else st.multiselect("选择", all_markets, default=all_markets[:1])
-            if not selected_markets: st.stop()
-            df_view = df[df['屠宰场'].isin(selected_markets)]
-            dates = sorted(df_view['日期'].unique())
-            
-            # 1. 预警
+            # 预警
             st.markdown("#### 🚨 智能预警")
             alerts_up, alerts_down = [], []
+            dates = sorted(df['日期'].unique())
             if len(dates) >= 3:
-                pivot = df_view.groupby(['屠宰场', '日期'])['总头数'].sum().unstack(fill_value=0)
+                pivot = df.groupby(['屠宰场', '日期'])['总头数'].sum().unstack(fill_value=0)
                 last_3 = dates[-3:]
                 for m in pivot.index:
                     vals = [pivot.loc[m, d] if d in pivot.columns else 0 for d in last_3]
@@ -445,9 +458,9 @@ elif st.session_state.current_page == 'analysis':
                 for i, x in enumerate(sorted(alerts_down, key=lambda x: x['pct'])[:10], 1): st.markdown(f"**{i}. {x['屠宰场']}** {abs(x['pct']):.1f}%")
                 st.markdown("</div>", unsafe_allow_html=True)
             
-            # 更多分析简略展示...
+            # 趋势
             st.markdown("#### 📊 市场趋势")
-            stats = df_view.groupby('屠宰场')['总头数'].sum().reset_index().sort_values('总头数', ascending=False)
+            stats = df.groupby('屠宰场')['总头数'].sum().reset_index().sort_values('总头数', ascending=False)
             top_10 = stats.head(10)
             st.plotly_chart(px.pie(top_10, values='总头数', names='屠宰场', hole=0.4), use_container_width=True)
 
