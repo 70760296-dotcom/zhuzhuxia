@@ -11,22 +11,9 @@ import math
 import datetime
 
 # --- 1. 核心配置 ---
-TESSERACT_PATH = '/opt/homebrew/bin/tesseract'
-try:
-    import pytesseract
-    from PIL import Image
-    if os.path.exists(TESSERACT_PATH):
-        pytesseract.pytesseract.tesseract_cmd = TESSERACT_PATH
-        OCR_STATUS = "✅ 系统就绪"
-        CAN_OCR = True
-    else:
-        OCR_STATUS = "❌ 未检测到引擎"
-        CAN_OCR = False
-except Exception as e:
-    OCR_STATUS = f"❌ 错误: {e}"
-    CAN_OCR = False
+# (配置保持不变)
 
-# --- 2. 核心数据库：坐标植入 (保持不变) ---
+# --- 2. 核心数据库：坐标植入 (完整版) ---
 FARM_COORDS = {
     '内乡牧原11场生长场': (111.974177, 33.026172), '内乡牧原12场生长场': (111.964335, 33.008181), '内乡牧原13场生长场': (111.944352, 33.151336), '内乡牧原15场生长场': (111.92744, 33.102825), '内乡牧原17场1区繁殖场': (111.842253, 33.159667), '内乡牧原17场2区繁殖场': (111.842253, 33.159667), '内乡牧原17场3区生长场': (111.842253, 33.159667), '内乡牧原17场4区生长场': (111.842253, 33.159667), '内乡牧原17场5区生长场': (111.841409, 33.151251), '内乡牧原17场6区生长场': (111.840229, 33.146988), '内乡牧原19场繁殖场': (111.947467, 33.152173), '内乡牧原1场租赁生长场': (111.947467, 33.152173), '内乡牧原20场1区繁殖场': (111.905003, 33.013748), '内乡牧原20场2区生长场': (111.905003, 33.013748), '内乡牧原20场3区生长场': (111.905003, 33.013748), '内乡牧原21场1区生长场': (111.911004, 33.144053), '内乡牧原21场2区生长场': (111.911004, 33.144053), '内乡牧原21场繁殖场': (111.911004, 33.144053), '内乡牧原22场1区生长场': (111.986033, 33.107356), '内乡牧原22场2区生长场': (111.986033, 33.107356), '内乡牧原23场综合场': (111.986033, 33.107356), '内乡牧原24场1区繁殖场': (111.970761, 33.070916), '内乡牧原24场2区繁殖场': (111.970761, 33.070916), '内乡牧原25场生长场': (111.92369, 33.12152), '内乡牧原26场繁殖场': (111.915435, 33.129517), '内乡牧原26场生长场': (111.915435, 33.129517), '内乡牧原28场繁殖场': (111.746177, 32.897301), '内乡牧原28场生长场': (111.746177, 32.897301), '内乡牧原29场繁殖场': (111.969414, 33.074272), '内乡牧原2场生长场': (111.990176, 33.045516), '内乡牧原3场繁殖场': (111.990176, 33.045516), '内乡牧原4场生长场': (111.968607, 33.058257), '内乡牧原5场繁殖场': (111.953226, 33.200614), '内乡牧原6场1区繁殖场': (111.959299, 33.172772), '内乡牧原6场2区繁殖场': (111.959299, 33.172772), '内乡牧原7场繁殖场': (111.9411, 33.280882), '内乡牧原8场生长场': (112.464937, 32.753359), '内乡牧原9场生长场': (111.937688, 33.134416), '卧龙牧原10场繁殖场': (112.451757, 32.904118), '卧龙牧原12场2区综合场': (112.448421, 32.924804), '卧龙牧原12场3区综合场': (112.448421, 32.924804), '卧龙牧原13场生长场': (112.438526, 32.716362), '卧龙牧原15场繁殖场': (112.436938, 32.715324), '卧龙牧原15场生长场': (112.436938, 32.715324), '卧龙牧原1场1区繁殖场': (112.374574, 33.103214), '卧龙牧原1场2区繁殖场': (112.374574, 33.103214), '卧龙牧原1场3区生长场': (112.374574, 33.103214), '卧龙牧原1场4区生长场': (112.370244, 33.101406), '卧龙牧原1场生长场': (112.374574, 33.103214), '卧龙牧原21场1区生长场': (112.364758, 32.813563), '卧龙牧原21场2区生长场': (112.364758, 32.813563), '卧龙牧原2场1区繁殖场': (112.461097, 32.867091), '卧龙牧原2场2区繁殖场': (112.461097, 32.867091), '卧龙牧原2场3区繁殖场': (112.461097, 32.867091), '卧龙牧原2场生长场': (112.472132, 32.863643), '卧龙牧原2场租赁生长场': (112.472132, 32.863643), '卧龙牧原3场1区生长场': (112.460363, 32.884551), '卧龙牧原3场2区生长场': (112.460363, 32.884551), '卧龙牧原3场3区生长场': (112.460363, 32.884551), '卧龙牧原4场生长场': (112.460363, 32.884551), '卧龙牧原5场繁殖场': (112.417827, 32.863004), '卧龙牧原6场综合场': (112.387061, 32.811967), '卧龙牧原7场生长场': (112.369105, 32.809783), '卧龙牧原8场1区生长场': (112.464956, 32.753488), '卧龙牧原8场2区生长场': (112.464956, 32.753488), '卧龙牧原9场1区繁殖场': (112.40745, 32.80019), '邓州牧原10场1区生长场': (112.040009, 32.527833), '邓州牧原10场2区生长场': (112.040009, 32.527833), '邓州牧原11场繁殖场': (112.016231, 32.539892), '邓州牧原13场繁殖场': (112.026349, 32.547851), '邓州牧原16场1区生长场': (111.961486, 32.582227), '邓州牧原16场2区生长场': (111.961486, 32.582227), '邓州牧原17场1区繁殖场': (111.961335, 32.561949), '邓州牧原17场2区繁殖场': (111.961335, 32.561949), '邓州牧原19场1区繁殖场': (111.946638, 33.156046), '邓州牧原19场2区生长场': (111.946638, 33.156046), '邓州牧原1场1区繁殖场': (111.939778, 32.596485), '邓州牧原1场2区繁殖场': (111.939778, 32.596485), '邓州牧原1场3区生长场': (111.939778, 32.596485), '邓州牧原20场1区生长场': (112.206093, 32.438925), '邓州牧原20场繁殖场': (112.206093, 32.438925), '邓州牧原2场1区繁殖场': (111.900341, 32.730574), '邓州牧原5场1区生长场': (111.965743, 32.567181), '邓州牧原8场生长场': (112.001082, 32.577257), '邓州牧原9场繁殖场': (112.047539, 32.485368), '唐河牧原10场繁殖场': (113.098992, 32.680748), '唐河牧原15场生长场': (113.08041, 32.680881), '唐河牧原1场1区繁殖场': (113.065606, 32.67099), '唐河牧原4场综合场': (113.173967, 32.592078), '唐河牧原5场1区繁殖场': (112.840316, 32.77503), '唐河牧原7场1区生长场': (112.844493, 32.798281), '扶沟牧原10场生长场': (114.476376, 34.156781), '扶沟牧原12场1区繁殖场': (114.305056, 34.146332), '扶沟牧原14场1区繁殖场': (114.469606, 34.23459), '扶沟牧原16场生长场': (114.382443, 33.938194), '扶沟牧原18场1区繁殖场': (114.30999, 34.26207), '扶沟牧原1场繁殖场': (114.534235, 34.191469), '扶沟牧原20场1区生长场': (114.462208, 34.128939), '扶沟牧原22场繁殖场': (114.509028, 34.000119), '扶沟牧原2场生长场': (114.441108, 34.296706), '扶沟牧原3场繁殖场': (114.515486, 33.984217), '扶沟牧原4场生长场': (114.317734, 33.952445), '扶沟牧原5场生长场': (114.481389, 33.997227), '扶沟牧原6场繁殖场': (114.393169, 34.182955), '扶沟牧原7场1区生长场': (114.350789, 34.125575), '扶沟牧原8场繁殖场': (114.465827, 34.020385), '通许牧原10场生长场': (114.600493, 34.376351), '通许牧原14场繁殖场': (114.558036, 34.272952), '通许牧原1场1区生长场': (114.542434, 34.537943), '通许牧原4场1区繁殖场': (114.61996, 34.553395), '通许牧原5场生长场': (114.548289, 34.537443), '通许牧原6场生长场': (114.42217, 34.337992), '通许牧原7场生长场': (114.526967, 34.376966), '通许牧原8场繁殖场': (114.521447, 34.375702), '杞县牧原10场生长场': (114.802569, 34.318349), '杞县牧原11场繁殖场': (114.685458, 34.25178), '杞县牧原12场生长场': (114.825424, 34.463255), '杞县牧原13场繁殖场': (114.772043, 34.302192), '杞县牧原14场繁殖场': (114.787337, 34.622716), '杞县牧原17场繁殖场': (114.789134, 34.755146), '杞县牧原1场繁殖场': (114.830521, 34.626933), '杞县牧原2场生长场': (114.849498, 34.632432), '杞县牧原3场繁殖场': (114.868837, 34.619871), '杞县牧原4场生长场': (114.85148, 34.643497), '杞县牧原5场生长场': (114.803972, 34.326784), '杞县牧原6场繁殖场': (114.673014, 34.363661), '杞县牧原7场生长场': (114.688599, 34.34959), '杞县牧原8场繁殖场': (114.740518, 34.299861), '杞县牧原9场繁殖场': (114.736343, 34.299406), '正阳牧原11场生长场': (114.310925, 32.410353), '正阳牧原12场繁殖场': (114.310925, 32.410353), '正阳牧原13场生长场': (114.311269, 32.441467), '正阳牧原15场繁殖场': (114.404174, 32.541377), '正阳牧原16场繁殖场': (114.639643, 32.614299), '正阳牧原1场1区繁殖场': (114.396229, 32.441344), '正阳牧原22场1区生长场': (114.60647, 32.701178), '正阳牧原25场繁殖场': (114.494961, 32.699292), '正阳牧原2场生长场': (114.402125, 32.431865), '正阳牧原3场生长场': (114.267804, 32.448651), '正阳牧原4场1区生长场': (114.226775, 32.470653), '正阳牧原5场1区生长场': (114.48091, 32.318709), '正阳牧原6场1区生长场': (114.313159, 32.487546), '正阳牧原9场1区繁殖场': (114.609641, 32.396875), '滑县牧原11场繁殖场': (114.910323, 35.435523), '滑县牧原12场综合场': (114.863772, 35.581728), '滑县牧原13场繁殖场': (114.768319, 35.678649), '滑县牧原17场生长场': (114.914687, 35.439255), '滑县牧原18场生长场': (114.861232, 35.581648), '滑县牧原19场繁殖场': (114.861232, 35.581648), '滑县牧原1场繁殖场': (114.669324, 35.549119), '滑县牧原20场综合场': (114.8566, 35.584565), '滑县牧原21场生长场': (114.76871, 35.673052), '滑县牧原2场繁殖场': (114.416739, 35.433193), '滑县牧原4场生长场': (114.450984, 35.373663), '滑县牧原5场生长场': (114.878013, 35.49818), '滑县牧原6场繁殖场': (114.546753, 35.415082), '滑县牧原7场生长场': (114.884387, 35.437588), '滑县牧原8场生长场': (114.480039, 35.440465), '滑县牧原9场1区生长场': (114.574162, 35.348043), '方城牧原1场生长场': (112.723136, 33.216503), '方城牧原2场繁殖场': (112.756394, 33.193222), '方城牧原3场生长场': (112.887197, 33.236334), '方城牧原4场繁殖场': (112.769004, 33.227923), '方城牧原5场繁殖场': (113.05969, 33.310757), '方城牧原6场繁殖场': (113.374889, 33.230711), '方城牧原8场1区繁殖场': (112.933424, 33.215781), '西华牧原10场1区生长场': (114.406725, 33.697725), '西华牧原12场生长场': (114.421573, 33.813799), '西华牧原15场繁殖场': (114.535311, 33.935042), '西华牧原16场1区繁殖场': (114.132213, 33.756967), '西华牧原18场繁殖场': (114.380932, 33.808181), '西华牧原1场繁殖场': (114.606926, 33.838749), '西华牧原2场1区生长场': (114.421573, 33.813799), '西华牧原3场繁殖场': (114.424913, 33.692579), '西华牧原4场生长场': (114.36509, 33.761367), '西华牧原6场繁殖场': (114.154124, 33.74991), '西华牧原7场生长场': (114.326346, 33.809045), '社旗牧原10场生长场': (113.044809, 32.992864), '社旗牧原15场繁殖场': (113.049431, 33.144965), '社旗牧原1场繁殖场': (112.90821, 32.903147), '社旗牧原2场1区繁殖场': (112.875974, 32.915255), '社旗牧原3场繁殖场': (113.027637, 33.121056), '社旗牧原4场繁殖场': (113.086909, 32.911084), '社旗牧原6场生长场': (112.980658, 32.934554), '社旗牧原7场繁殖场': (112.995265, 32.942564), '太康牧原10场繁殖场': (114.858139, 34.225991), '太康牧原11场生长场': (114.691381, 34.180274), '太康牧原12场生长场': (114.883928, 34.226933), '太康牧原16场繁殖场': (114.725673, 34.208446), '太康牧原17场生长场': (115.078598, 34.078847), '太康牧原19场繁殖场': (115.076879, 34.197575), '太康牧原1场繁殖场': (114.969267, 33.930445), '太康牧原2场生长场': (114.975076, 33.973711), '太康牧原3场1区繁殖场': (115.058843, 34.028535), '太康牧原4场生长场': (114.933625, 34.113059), '太康牧原5场繁殖场': (114.955165, 34.146071), '太康牧原6场生长场': (114.972051, 34.208221), '太康牧原7场繁殖场': (114.984313, 34.213941), '太康牧原8场生长场': (114.994072, 34.089585), '太康牧原9场繁殖场': (114.804563, 34.248009), '商水牧原10场繁殖场': (114.391182, 33.522993), '商水牧原11场1区生长场': (114.298721, 33.563119), '商水牧原12场1区繁殖场': (114.371631, 33.562351), '商水牧原13场繁殖场': (114.276814, 33.719183), '商水牧原14场繁殖场': (114.377046, 33.565231), '商水牧原16场1区生长场': (114.360034, 33.481794), '商水牧原18场生长场': (114.371217, 33.623306), '商水牧原20场繁殖场': (114.32157, 33.520108), '商水牧原2场繁殖场': (114.485775, 33.632882), '商水牧原3场1区生长场': (114.360097, 33.648606), '商水牧原4场1区繁殖场': (114.318776, 33.686999), '商水牧原5场生长场': (114.407115, 33.55214), '商水牧原6场生长场': (114.297139, 33.6198), '商水牧原7场繁殖场': (114.348387, 33.525971), '商水牧原9场1区繁殖场': (114.284775, 33.475375), '鹿邑牧原1场1区生长场': (115.107514, 33.906014), '鹿邑牧原2场1区繁殖场': (115.107733, 33.847515), '鹿邑牧原3场1区生长场': (115.162269, 33.834735), '鹿邑牧原4场生长场': (115.204717, 33.894452), '鹿邑牧原5场繁殖场': (115.283823, 33.838782), '鹿邑牧原6场繁殖场': (115.406869, 33.843175), '睢阳牧原1场生长场': (115.372991, 34.30589), '睢阳牧原2场1区繁殖场': (115.394478, 34.301459), '睢阳牧原3场生长场': (115.381369, 34.23822), '睢阳牧原5场生长场': (115.539335, 34.260437), '睢阳牧原6场繁殖场': (115.563844, 34.284099), '宁陵牧原13场1区生长场': (115.204456, 34.399346), '宁陵牧原16场1区繁殖场': (115.21348, 34.316126), '宁陵牧原19场生长场': (115.225016, 34.295972), '宁陵牧原1场繁殖场': (115.184293, 34.594404), '宁陵牧原20场1区生长场': (115.227692, 34.280056), '宁陵牧原21场繁殖场': (115.240957, 34.264339), '宁陵牧原22场繁殖场': (115.188782, 34.26169), '宁陵牧原28场繁殖场': (115.29429, 34.363558), '宁陵牧原5场繁殖场': (115.343291, 34.593422), '宁陵牧原6场1区生长场': (115.366896, 34.584866), '宁陵牧原8场繁殖场': (115.195679, 34.479354), '范县牧原10场繁殖场': (115.433176, 35.701728), '范县牧原11场繁殖场': (115.433176, 35.701728), '范县牧原12场生长场': (115.37954, 35.666982), '范县牧原1场繁殖场': (115.663657, 35.918681), '范县牧原2场生长场': (115.636283, 35.886855), '范县牧原3场生长场': (115.468787, 35.834542), '范县牧原4场繁殖场': (115.468787, 35.834542), '上蔡牧原10场繁殖场': (114.597094, 33.331728), '上蔡牧原11场1区繁殖场': (114.592895, 33.291364), '上蔡牧原12场1区繁殖场': (114.488603, 33.188278), '上蔡牧原13场1区繁殖场': (114.431345, 33.193637), '上蔡牧原14场生长场': (114.151295, 33.246892), '上蔡牧原1场1区繁殖场': (114.211413, 33.427381), '上蔡牧原2场1区繁殖场': (114.182804, 33.284621), '上蔡牧原3场1区生长场': (114.188439, 33.277563), '上蔡牧原5场1区繁殖场': (114.377966, 33.379694), '上蔡牧原7场繁殖场': (114.597546, 33.328243), '上蔡牧原9场1区繁殖场': (114.656275, 33.336533), '平舆牧原14场1区生长场': (114.505587, 32.920675), '平舆牧原15场生长场': (114.506518, 32.901039), '平舆牧原19场繁殖场': (114.856964, 32.959003), '平舆牧原1场1区生长场': (114.694314, 33.096976), '平舆牧原22场1区繁殖场': (114.879543, 32.993171), '平舆牧原24场繁殖场': (114.918433, 33.033991), '平舆牧原5场繁殖场': (114.463016, 33.103533), '西平牧原13场1区生长场': (113.878267, 33.41632), '西平牧原15场生长场': (114.147231, 33.383893), '西平牧原1场1区繁殖场': (113.855833, 33.460291), '西平牧原3场1区生长场': (113.832749, 33.435636), '西平牧原3场繁殖场': (113.832749, 33.435636), '西平牧原5场繁殖场': (113.824765, 33.41877), '项城牧原1场繁殖场': (114.969351, 33.341667), '项城牧原2场繁殖场': (114.955791, 33.400818), '项城牧原5场繁殖场': (114.992432, 33.366438), '夏邑牧原1场繁殖场': (116.021757, 34.37114), '夏邑牧原2场生长场': (116.185354, 34.395277), '夏邑牧原3场繁殖场': (116.19236, 34.380636), '安阳牧原1场生长场': (114.742931, 36.149707), '安阳牧原2场繁殖场': (114.736737, 36.152901), '清丰牧原1场繁殖场': (115.013965, 35.930652), '清丰牧原5场1区生长场': (114.974481, 36.000238), '清丰牧原6场生长场': (115.073586, 36.02997), '鄢陵牧原1场繁殖场': (114.278951, 34.211083), '滑县牧华1场生长场': (114.66455, 35.434151), '滑县牧华7场生长场': (114.882755, 35.437019), '南阳牧华1场繁殖场': (111.907079, 33.187769), '扶沟牧华1场繁殖场': (114.508413, 34.00963), '扶沟牧华2场生长场': (114.515071, 34.199964), '宁陵牧华1场生长场': (115.203586, 34.424804), '宁陵牧华3场繁殖场': (115.236797, 34.46787), '宁陵牧华4场繁殖场': (115.302588, 34.386711), '内乡牧原综合体10场': (111.956292, 33.184221), '内乡牧原综合体17场': (111.842253, 33.159667), '南召牧原1场繁殖场': (112.524846, 33.487632), '濮阳牧原12场租赁生长场': (115.231662, 35.48797), '濮阳牧原2场繁殖场': (115.144263, 35.585837), '濮阳牧原5场生长场': (115.012253, 35.473605), '镇平牧原2场综合场': (112.326087, 33.123013), '镇平牧原3场繁殖场': (112.317528, 33.127016), '镇平牧原8场1区繁殖场': (112.055052, 33.010308), '西峡牧原3场综合场': (111.721681, 33.113242), '内黄牧原10场繁殖场': (114.676152, 35.859131), '内黄牧原11场生长场': (114.706347, 35.899028), '内黄牧原13场繁殖场': (114.848, 35.845564), '内黄牧原15场繁殖场': (114.775343, 35.778547), '内黄牧原1场繁殖场': (114.849337, 35.845527), '内黄牧原3场生长场': (114.854075, 35.847703), '柘城牧原4场繁殖场': (115.479402, 34.050515), '柘城牧原6场生长场': (115.34387, 34.023975), '淅川牧原1场综合场': (111.790194, 32.761963), '民权牧原1场繁殖场': (115.398268, 34.735022), '民权牧原2场生长场': (115.425417, 34.763513), '民权牧原3场繁殖场': (115.383588, 34.687681), '汝州牧原13场繁殖场': (112.745647, 34.111043), '汝州牧原18场繁殖场': (112.926211, 33.997585), '汝州牧原1场生长场': (112.806389, 34.08455), '汝州牧原3场1区繁殖场': (112.918969, 34.035937), '固始牧原1场综合场': (115.474146, 32.238077), '固始牧原3场繁殖场': (115.684886, 32.380696), '新野牧原3场': (112.425975, 32.364675), '汝州牧原综合体1场': (112.948399, 34.011976), '永城牧原1场综合场': (116.304441, 33.801682), '桐柏牧原1场繁殖场': (113.058334, 32.519104), '长垣牧原1场生长场': (114.766986, 35.339155), '延津牧原1场生长场': (114.377132, 35.291432), '颍泉牧原1场繁殖场': (115.599268, 33.098624), '蒙城牧原10场1区生长场': (116.609376, 33.394049), '蒙城牧原14场繁殖场': (116.798065, 33.192355), '濉溪牧原10场1区生长场': (116.624214, 33.710737), '颍上牧原10场繁殖场': (116.500112, 32.531886), '界首牧原2场繁殖场': (115.444683, 33.376172), '泗县牧原10场1区繁殖场': (117.830689, 33.424762), '凤台牧原10场1区生长场': (116.51289, 32.904951), '曹县牧原10场1区繁殖场': (115.311951, 34.982697), '曹县牧原14场1区生长场': (115.74445, 34.680556), '曹县牧原9场1区生长场': (115.24956, 34.846942),
 }
@@ -37,19 +24,12 @@ SLAUGHTERHOUSE_COORDS = {
 
 CITY_COORDS = { '南阳': (33.00, 112.53), '内乡': (33.05, 111.83), '郑州': (34.74, 113.65) }
 
-# --- 3. 样式定义 (修正版) ---
+# --- 3. 样式定义 (完整版) ---
 st.markdown("""
 <style>
-    /* 全局背景与字体 */
     [data-testid="stMainBlockContainer"] { padding: 2rem 2.5rem !important; }
     header, footer { visibility: hidden; }
     
-    /* 首页背景渐变 */
-    .stApp {
-        background: linear-gradient(135deg, #1a1c2c 0%, #4a192c 100%);
-    }
-
-    /* 标题样式 */
     .hero-title {
         font-size: 3.5rem; font-weight: 800; color: #fff; text-align: center;
         margin-bottom: 0.5rem; letter-spacing: 2px; text-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -57,8 +37,6 @@ st.markdown("""
     .hero-subtitle {
         font-size: 1.2rem; color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 3rem;
     }
-
-    /* 毛玻璃卡片 */
     .glass-card {
         background: rgba(255, 255, 255, 0.1);
         backdrop-filter: blur(15px);
@@ -80,8 +58,6 @@ st.markdown("""
     .card-icon { font-size: 3rem; margin-bottom: 1rem; }
     .card-title { font-size: 1.5rem; color: #fff; font-weight: 600; margin-bottom: 1rem; }
     .card-desc { font-size: 0.95rem; color: rgba(255,255,255,0.7); line-height: 1.5; min-height: 50px; }
-
-    /* 按钮样式 */
     .stButton>button {
         background: linear-gradient(45deg, #FF4B4B, #FF785F);
         color: white; border-radius: 50px; border: none;
@@ -93,18 +69,10 @@ st.markdown("""
         transform: scale(1.05);
         box-shadow: 0 6px 20px rgba(255, 75, 75, 0.6);
     }
-
-    /* 页面通用Header */
     .page-header {
         background: linear-gradient(135deg, #FF4B4B 0%, #FF7E5F 100%);
         padding: 30px; border-radius: 0px 0px 20px 20px; margin-top: -2rem; margin-bottom: 20px;
         box-shadow: 0 4px 20px rgba(255, 75, 75, 0.3); color: white;
-    }
-    
-    /* 结果展示卡片 */
-    .result-card {
-        background-color: #fff; padding: 20px; border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #eee;
     }
     .formula-text {
         font-size: 0.9rem; color: #555; background-color: #f0f2f6; padding: 8px 12px;
@@ -182,22 +150,20 @@ if 'current_page' not in st.session_state: st.session_state.current_page = 'home
 def go_to_page(page_name): st.session_state.current_page = page_name; st.rerun()
 
 # ==========================================
-# 页面 A: 官网首页 (修正版 v26.1)
+# 页面 A: 官网首页
 # ==========================================
 if st.session_state.current_page == 'home':
-    # 顶部标题区
     st.markdown("<div style='height: 5rem;'></div>", unsafe_allow_html=True)
     st.markdown("<div class='hero-title'>🐷 猪猪侠全力冲杀！</div>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v26.1 | 数据驱动 · 精准决策</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v28.0 | 智能加权 · 决策辅助</div>", unsafe_allow_html=True)
     
-    # 卡片区域
     c1, c2, c3 = st.columns([1, 1, 1])
     
     with c1:
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         st.markdown("<div class='card-icon'>🛒</div>", unsafe_allow_html=True)
         st.markdown("<div class='card-title'>结算定价</div>", unsafe_allow_html=True)
-        st.markdown("<div class='card-desc'>多维度成本利润核算<br>支持多日数据汇总分析</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-desc'>加权成本核算<br>智能决策建议</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         if st.button("进入模块", key="btn_home_1"): go_to_page('pricing')
     
@@ -205,34 +171,30 @@ if st.session_state.current_page == 'home':
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         st.markdown("<div class='card-icon'>📈</div>", unsafe_allow_html=True)
         st.markdown("<div class='card-title'>行情预测</div>", unsafe_allow_html=True)
-        st.markdown("<div class='card-desc'>实时行情监控<br>未来趋势智能研判</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-desc'>实时行情监控<br>未来趋势研判</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         if st.button("进入模块", key="btn_home_2"): go_to_page('trend')
         
     with c3:
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        # 【修正】此处修正了 unsafe_allowdiv -> unsafe_allow_html
         st.markdown("<div class='card-icon'>📊</div>", unsafe_allow_html=True)
         st.markdown("<div class='card-title'>销售全景</div>", unsafe_allow_html=True)
-        st.markdown("<div class='card-desc'>销售数据可视化<br>运距匹配与客户画像</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-desc'>销售数据可视化<br>运距匹配与画像</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         if st.button("进入模块", key="btn_home_3"): go_to_page('analysis')
         
-    # 底部版权
     st.markdown("<div style='height: 10rem;'></div>", unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem;'>© 2023 Muyuan Intelligent Decision System. All Rights Reserved.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem;'>© 2023 Muyuan Intelligent Decision System.</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 页面 B: 结算定价
+# 页面 B: 结算定价 (加权平均 + 智能决策版 v28.0)
 # ==========================================
 elif st.session_state.current_page == 'pricing':
     st.markdown("<div class='page-header'><h1>🛒 结算定价中心</h1></div>", unsafe_allow_html=True)
     if st.button("⬅️ 返回"): go_to_page('home')
     
     st.markdown("### 📤 数据上传")
-    st.caption("请上传包含：单价、预估成本、体重段/等级、头数、客户、屠宰场等信息的明细表")
-    
-    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v26")
+    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v28")
     
     if pricing_files:
         df_list = []
@@ -292,15 +254,17 @@ elif st.session_state.current_page == 'pricing':
             if df_view.empty: st.warning("筛选结果为空")
             else:
                 st.markdown("#### 💰 结算价录入 (元/公斤)")
-                st.info("每日数据将自动汇总 (同一天、同一客户、同一屠宰场合并为一行)")
+                st.info("系统将按 **头数加权** 计算平均单价和成本，并自动生成决策建议。")
                 
-                # 聚合
-                def weighted_avg(x, w): return np.average(x, weights=w) if w.sum() > 0 else 0
+                # --- 核心：加权平均聚合 ---
+                def weighted_avg(values, weights):
+                    return np.average(values, weights=weights) if np.sum(weights) > 0 else 0
+                
                 df_edit = df_view.groupby(['日期', '客户', '屠宰场']).apply(
                     lambda x: pd.Series({
                         '总头数': x['头数'].sum(),
                         '平均单价': weighted_avg(x['单价'], x['头数']),
-                        '预估成本': weighted_avg(x['预估成本'], x['头数']), # 这里是预估成本
+                        '预估成本': weighted_avg(x['预估成本'], x['头数']),
                         '平均体重': weighted_avg(x['平均体重'], x['头数'])
                     })
                 ).reset_index().round(2)
@@ -310,25 +274,19 @@ elif st.session_state.current_page == 'pricing':
                 edited = st.data_editor(
                     df_edit, column_config={
                         "结算价": st.column_config.NumberColumn("结算价(元/kg)", format="%.2f", min_value=0),
-                        "平均单价": st.column_config.NumberColumn("单价(元/kg)", format="%.2f"),
-                        "预估成本": st.column_config.NumberColumn("预估成本(元/kg)", format="%.2f")
+                        "平均单价": st.column_config.NumberColumn("加权单价(元/kg)", format="%.2f"),
+                        "预估成本": st.column_config.NumberColumn("加权成本(元/kg)", format="%.2f")
                     }, hide_index=True, use_container_width=True, num_rows="dynamic"
                 )
                 
-                if st.button("📊 计算利润", type="primary"):
-                    # --- 核心计算逻辑 (明确公式) ---
-                    # 公式：利润空间 = 结算价 - 预估成本
+                if st.button("📊 计算利润并生成建议", type="primary"):
+                    # --- 1. 核心计算 ---
                     edited['利润空间'] = edited['结算价'] - edited['预估成本']
-                    
-                    # 总利润 = 利润空间 * 总头数 * 平均体重
                     edited['总利润'] = edited['利润空间'] * edited['总头数'] * edited['平均体重']
                     
                     st.markdown("#### 📈 利润分析结果")
+                    st.markdown(f"<div class='formula-text'>🧮 <b>计算公式</b>：利润空间 = 结算价 - 预估到场成本 (按头数加权)</div>", unsafe_allow_html=True)
                     
-                    # 【新增】公式说明，让用户确认
-                    st.markdown(f"<div class='formula-text'>🧮 <b>计算公式</b>：利润空间 = 结算价 - 预估到场成本</div>", unsafe_allow_html=True)
-                    
-                    # 汇总指标
                     t_profit, t_heads, avg_margin = edited['总利润'].sum(), edited['总头数'].sum(), edited['利润空间'].mean()
                     c1, c2, c3 = st.columns(3)
                     c1.metric("总利润额", f"¥ {t_profit:,.0f}")
@@ -336,17 +294,60 @@ elif st.session_state.current_page == 'pricing':
                     c3.metric("平均利润空间", f"{avg_margin:.2f} 元/kg")
                     
                     res_cols = ['日期', '客户', '屠宰场', '总头数', '平均单价', '预估成本', '结算价', '利润空间', '总利润']
-                    st.dataframe(
-                        edited[res_cols].style.format({
-                            '平均单价': '{:.2f}', '预估成本': '{:.2f}', '结算价': '{:.2f}', 
-                            '利润空间': '{:.2f}', '总利润': '{:.0f}'
-                        }), hide_index=True, use_container_width=True
-                    )
+                    st.dataframe(edited[res_cols].style.format({'平均单价': '{:.2f}', '预估成本': '{:.2f}', '结算价': '{:.2f}', '利润空间': '{:.2f}', '总利润': '{:.0f}'}), hide_index=True, use_container_width=True)
                     
-                    # 图表分析...
-                    st.markdown("---"); st.markdown("#### 📉 深度趋势分析")
+                    # --- 2. 智能决策建议 (新增) ---
+                    st.markdown("---")
+                    st.markdown("#### 🤖 智能决策建议")
+                    
+                    if len(edited) >= 2:
+                        # 取最后两天的数据
+                        last_row = edited.iloc[-1]
+                        prev_row = edited.iloc[-2]
+                        
+                        # 计算变化值
+                        delta_price = last_row['结算价'] - prev_row['结算价']
+                        delta_cost = last_row['预估成本'] - prev_row['预估成本']
+                        delta_margin = last_row['利润空间'] - prev_row['利润空间']
+                        
+                        # 分析逻辑
+                        analysis = []
+                        
+                        # 1. 趋势分析
+                        if delta_margin > 0:
+                            analysis.append(f"✅ **利润空间扩大**：较前日增加 {delta_margin:.2f} 元/kg。")
+                            if delta_cost < 0:
+                                analysis.append(f"📉 **成本下降**：成本降低 {abs(delta_cost):.2f} 元/kg，优于价格波动。")
+                        elif delta_margin < 0:
+                            analysis.append(f"⚠️ **利润空间收缩**：较前日减少 {abs(delta_margin):.2f} 元/kg。")
+                            if delta_cost > 0 and delta_cost > delta_price:
+                                analysis.append(f"🔴 **成本失控**：成本上涨 ({delta_cost:.2f}) 幅度大于价格涨幅，需警惕。")
+                        
+                        # 2. 模拟预测
+                        analysis.append("---")
+                        analysis.append("**📊 情景推演**：")
+                        next_margin_if_up = last_row['利润空间'] + 0.1  # 假设涨价0.1元
+                        next_margin_if_down = last_row['利润空间'] - 0.1 # 假设降价0.1元
+                        
+                        if last_row['利润空间'] > 0.5:
+                            analysis.append(f"* 若明日 **涨价 0.1元**，预计利润空间将增至 **{next_margin_if_up:.2f} 元/kg**。")
+                            analysis.append(f"* 建议：**继续订购**。当前盈利能力健康，可适当放宽采购量。")
+                        elif last_row['利润空间'] > 0:
+                            analysis.append(f"* 若明日 **降价 0.1元**，预计利润空间将降至 **{next_margin_if_down:.2f} 元/kg**，逼近盈亏平衡点。")
+                            analysis.append(f"* 建议：**谨慎订购**。需严格压控成本或要求涨价。")
+                        else:
+                            analysis.append(f"❌ 当前处于 **亏损状态**。")
+                            analysis.append(f"* 建议：**立即暂停订购**，除非对方承诺降价或结算价大幅上调。")
+                        
+                        st.markdown(f"<div class='insight-card'>{'<br>'.join(analysis)}</div>", unsafe_allow_html=True)
+                        
+                    else:
+                        st.info("数据不足，需至少两天的数据才能生成趋势建议。")
+
+                    # 图表
+                    st.markdown("---")
+                    st.markdown("#### 📉 深度趋势分析")
                     if len(sel_c) == 1:
-                        st.markdown(f"**🎯 客户专注分析：{sel_c[0]}**")
                         cust_trend = edited.groupby('日期').agg(平均单价=('平均单价','mean'), 预估成本=('预估成本','mean'), 利润空间=('利润空间','mean')).reset_index()
                         fig = make_subplots(specs=[[{"secondary_y": True}]])
                         fig.add_trace(go.Scatter(x=cust_trend['日期'], y=cust_trend['平均单价'], name='单价', line=dict(color='blue')), secondary_y=False)
@@ -354,8 +355,6 @@ elif st.session_state.current_page == 'pricing':
                         fig.add_trace(go.Bar(x=cust_trend['日期'], y=cust_trend['利润空间'], name='利润空间', marker_color='rgba(50, 200, 50, 0.5)'), secondary_y=True)
                         fig.update_layout(title_text="单价 vs 成本 (线) & 利润空间 (柱)", hovermode="x unified")
                         st.plotly_chart(fig, use_container_width=True)
-                        if avg_margin > 0: st.success(f"💡 总结：该客户整体盈利，平均利润空间 {avg_margin:.2f} 元/kg。")
-                        else: st.error(f"💡 警告：该客户存在亏损风险。")
                     
                     # 导出
                     buffer = BytesIO()
@@ -371,7 +370,7 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (完整版)
+# 页面 D: 销售全景 (完整功能恢复版 v28.0)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
@@ -385,7 +384,7 @@ elif st.session_state.current_page == 'analysis':
     
     df_raw = st.session_state['sales_df_raw'] if st.session_state['sales_df_raw'] is not None else None
     if df_raw is None:
-        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v26")
+        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v28")
         if uploaded_files:
             df_list = []
             for f in uploaded_files: temp = pd.read_excel(f); temp['来源文件'] = f.name; df_list.append(temp)
@@ -437,15 +436,15 @@ elif st.session_state.current_page == 'analysis':
             if not selected_markets: st.stop()
             df_view = df[df['屠宰场'].isin(selected_markets)]; dates = sorted(df_view['日期'].unique())
             
-            # 预警
+            # 1. 核心市场智能预警
             st.markdown("#### 🚨 核心市场智能预警")
             alerts_up, alerts_down = [], []
             if len(dates) >= 3:
                 pivot = df_view.groupby(['屠宰场', '日期'])['总头数'].sum().unstack(fill_value=0); last_3 = dates[-3:]
                 for m in pivot.index:
                     vals = [pivot.loc[m, d] if d in pivot.columns else 0 for d in last_3]
-                    if vals[0] < vals[1] < vals[2]: alerts_up.append({'屠宰场': m, 'pct': (vals[2]-vals[0])/vals[0]*100 if vals[0]>0 else 0, 'data': f"{vals[0]}→{vals[1]}→{vals[2]}"})
-                    elif vals[0] > vals[1] > vals[2]: alerts_down.append({'屠宰场': m, 'pct': (vals[2]-vals[0])/vals[0]*100 if vals[0]>0 else 0, 'data': f"{vals[0]}→{vals[1]}→{vals[2]}"})
+                    if vals[0] < vals[1] < vals[2]: alerts_up.append({'屠宰场': m, 'pct': (vals[2]-vals[0])/vals[0]*100 if vals[0]>0 else 0})
+                    elif vals[0] > vals[1] > vals[2]: alerts_down.append({'屠宰场': m, 'pct': (vals[2]-vals[0])/vals[0]*100 if vals[0]>0 else 0})
             
             col_up, col_down = st.columns(2)
             with col_up:
@@ -457,23 +456,90 @@ elif st.session_state.current_page == 'analysis':
                 for i, item in enumerate(sorted(alerts_down, key=lambda x: x['pct'])[:10], 1): st.markdown(f"**{i}. {item['屠宰场']}** ⬇️ **{abs(item['pct']):.1f}%**")
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # 趋势
+            # 2. 体重段分析
+            if not is_select_all and len(selected_markets) == 1:
+                st.markdown("#### ⚖️ 体重需求分析")
+                target_market = selected_markets[0]
+                df_single = df_view[df_view['屠宰场'] == target_market]
+                weight_trend = df_single.groupby(['日期', '体重段'])['总头数'].sum().reset_index()
+                fig_weight = px.bar(weight_trend, x='日期', y='总头数', color='体重段', barmode='group', title=f"{target_market} 每日体重段收购情况")
+                st.plotly_chart(fig_weight, use_container_width=True)
+                if not weight_trend.empty:
+                    top_weight = weight_trend.groupby('体重段')['总头数'].sum().idxmax()
+                    st.markdown(f"<div class='insight-card'>💡 <b>需求洞察：</b>该屠宰场偏好 <b>{top_weight}</b>。</div>", unsafe_allow_html=True)
+                st.markdown("---")
+
+            # 3. 市场趋势
             st.markdown("#### 📊 市场趋势")
             stats = df_view.groupby('屠宰场')['总头数'].sum().reset_index().sort_values('总头数', ascending=False)
             top_10 = stats.head(10)
             st.plotly_chart(px.pie(top_10, values='总头数', names='屠宰场', hole=0.4), use_container_width=True)
+            
+            line_data = df_view[df_view['屠宰场'].isin(top_10['屠宰场'].tolist())].groupby(['日期', '屠宰场'])['总头数'].sum().reset_index()
+            fig_line = px.line(line_data, x='日期', y='总头数', color='屠宰场', markers=True)
+            st.plotly_chart(fig_line, use_container_width=True)
+            st.markdown("---")
 
-            # 客户画像
+            # 4. 重点客户画像 (完整版)
             st.markdown("#### 🤝 重点客户画像")
             df_mid_view = df_view[df_view['采购类型'] == '中间商']
             if not df_mid_view.empty:
                 all_mid = df[df['采购类型'] == '中间商']
-                cust_stats = all_mid.groupby('客户姓名').agg(总头数=('总头数','sum'), 出现天数=('日期','nunique'), 主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'), 最小运距=('运距','min'), 最大运距=('运距','max')).reset_index()
+                cust_stats = all_mid.groupby('客户姓名').agg(
+                    总头数=('总头数','sum'), 出现天数=('日期','nunique'), 主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'),
+                    最小运距=('运距','min'), 最大运距=('运距','max')
+                ).reset_index()
                 cust_stats['运距区间'] = cust_stats.apply(lambda x: f"{x['最小运距']:.0f}-{x['最大运距']:.0f}km", axis=1)
-                df_focus = cust_stats[cust_stats['客户姓名'].isin(df_mid_view['客户姓名'].unique())].nlargest(10, '总头数')
-                st.dataframe(df_focus[['客户姓名', '总头数', '主要流向', '运距区间']], hide_index=True)
-            
-            # 运距诊断
+                
+                active_customers = df_mid_view['客户姓名'].unique()
+                cust_stats_active = cust_stats[cust_stats['客户姓名'].isin(active_customers)]
+                top_cust_list = cust_stats_active.nlargest(20, '总头数')['客户姓名'].tolist()
+                df_focus = cust_stats_active[cust_stats_active['客户姓名'].isin(top_cust_list)]
+                
+                tab_pub, tab_pri, tab_comp = st.tabs(["🏢 公户", "👤 个人户", "📊 客户调运对比"])
+                
+                with tab_pub:
+                    pub_data = df_focus[df_focus['客户分类'] == '🏢 公户'].nlargest(10, '总头数')
+                    if not pub_data.empty:
+                        disp_cols = ['客户姓名', '总头数', '出现天数', '主要流向', '运距区间']
+                        if has_price: disp_cols.insert(3, '平均单价')
+                        st.dataframe(pub_data[disp_cols], hide_index=True)
+                    else: st.info("暂无公户")
+                
+                with tab_pri:
+                    pri_data = df_focus[df_focus['客户分类'] == '👤 个人户'].nlargest(10, '总头数')
+                    if not pri_data.empty:
+                        disp_cols = ['客户姓名', '总头数', '出现天数', '主要流向', '运距区间']
+                        if has_price: disp_cols.insert(3, '平均单价')
+                        st.dataframe(pri_data[disp_cols], hide_index=True)
+                    else: st.info("暂无个人户")
+
+                with tab_comp:
+                    st.markdown("**📈 核心客户每日调运对比**")
+                    compare_cust = st.multiselect("选择对比客户", top_cust_list, default=top_cust_list[:2], key="comp_cust_sel")
+                    if compare_cust:
+                        df_comp = df_mid_view[df_mid_view['客户姓名'].isin(compare_cust)]
+                        comp_vol = df_comp.groupby(['日期', '客户姓名'])['总头数'].sum().reset_index()
+                        fig_comp_vol = px.line(comp_vol, x='日期', y='总头数', color='客户姓名', markers=True, title="每日调运量对比")
+                        st.plotly_chart(fig_comp_vol, use_container_width=True)
+                        
+                        comp_weight = df_comp.groupby(['日期', '客户姓名', '体重段'])['总头数'].sum().reset_index()
+                        fig_comp_w = px.bar(comp_weight, x='日期', y='总头数', color='体重段', facet_col='客户姓名', title="每日收购体重结构")
+                        st.plotly_chart(fig_comp_w, use_container_width=True)
+                        st.markdown(f"<div class='insight-card'>💡 通过图表可观察不同客户的'步调一致性'。</div>", unsafe_allow_html=True)
+
+                with st.expander("🔍 查看单人详细画像"):
+                    sel_name = st.selectbox("选择客户", top_cust_list)
+                    if sel_name:
+                        c_d = all_mid[all_mid['客户姓名'] == sel_name]
+                        st.markdown(f"**选手类型**：{classify_customer(sel_name)}")
+                        c1, c2, c3 = st.columns(3)
+                        with c1: st.plotly_chart(px.pie(c_d, values='总头数', names='子公司', hole=0.4, title='源头'), use_container_width=True)
+                        with c2: st.plotly_chart(px.pie(c_d, values='总头数', names='体重段', hole=0.4, title='体重'), use_container_width=True)
+                        with c3: st.plotly_chart(px.pie(c_d, values='总头数', names='屠宰场', hole=0.4, title='流向'), use_container_width=True)
+
+            # 5. 运距诊断报告
+            st.markdown("---")
             with st.expander("🔧 运距匹配诊断报告"):
                 st.warning("如果运距显示 0-0km，请确认名称是否在字典中。")
                 unmatched_farms, unmatched_marks = set(), set()
