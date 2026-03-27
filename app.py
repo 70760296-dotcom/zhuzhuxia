@@ -155,7 +155,7 @@ def go_to_page(page_name): st.session_state.current_page = page_name; st.rerun()
 if st.session_state.current_page == 'home':
     st.markdown("<div style='height: 5rem;'></div>", unsafe_allow_html=True)
     st.markdown("<div class='hero-title'>🐷 猪猪侠全力冲杀！</div>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v28.0 | 智能加权 · 决策辅助</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v28.1 | 智能加权 · 决策辅助</div>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1, 1])
     
@@ -187,7 +187,7 @@ if st.session_state.current_page == 'home':
     st.markdown("<div style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem;'>© 2023 Muyuan Intelligent Decision System.</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 页面 B: 结算定价 (加权平均 + 智能决策版 v28.0)
+# 页面 B: 结算定价 (加权平均 + 智能决策版 v28.1)
 # ==========================================
 elif st.session_state.current_page == 'pricing':
     st.markdown("<div class='page-header'><h1>🛒 结算定价中心</h1></div>", unsafe_allow_html=True)
@@ -370,7 +370,7 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (完整功能恢复版 v28.0)
+# 页面 D: 销售全景 (修复版 v28.1)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
@@ -480,15 +480,23 @@ elif st.session_state.current_page == 'analysis':
             st.plotly_chart(fig_line, use_container_width=True)
             st.markdown("---")
 
-            # 4. 重点客户画像 (完整版)
+            # 4. 重点客户画像 (修复版 v28.1)
             st.markdown("#### 🤝 重点客户画像")
             df_mid_view = df_view[df_view['采购类型'] == '中间商']
             if not df_mid_view.empty:
                 all_mid = df[df['采购类型'] == '中间商']
+                
+                # 【关键修复】在 agg 中包含 '客户分类' 和 '平均单价'
                 cust_stats = all_mid.groupby('客户姓名').agg(
-                    总头数=('总头数','sum'), 出现天数=('日期','nunique'), 主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'),
-                    最小运距=('运距','min'), 最大运距=('运距','max')
+                    总头数=('总头数', 'sum'), 
+                    出现天数=('日期', 'nunique'), 
+                    平均单价=('单价', 'mean'),
+                    客户分类=('客户分类', 'first'),  # 修复：添加此行
+                    主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'),
+                    最小运距=('运距', 'min'), 
+                    最大运距=('运距', 'max')
                 ).reset_index()
+                
                 cust_stats['运距区间'] = cust_stats.apply(lambda x: f"{x['最小运距']:.0f}-{x['最大运距']:.0f}km", axis=1)
                 
                 active_customers = df_mid_view['客户姓名'].unique()
@@ -499,6 +507,7 @@ elif st.session_state.current_page == 'analysis':
                 tab_pub, tab_pri, tab_comp = st.tabs(["🏢 公户", "👤 个人户", "📊 客户调运对比"])
                 
                 with tab_pub:
+                    # 此时 df_focus 必定包含 '客户分类' 列，不再报错
                     pub_data = df_focus[df_focus['客户分类'] == '🏢 公户'].nlargest(10, '总头数')
                     if not pub_data.empty:
                         disp_cols = ['客户姓名', '总头数', '出现天数', '主要流向', '运距区间']
