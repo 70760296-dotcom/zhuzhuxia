@@ -55,24 +55,52 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 4. 核心计算函数 ---
+
 def haversine(lat1, lon1, lat2, lon2):
+    """计算两点间距离 (km)"""
     R = 6371.0
     dlat, dlon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
     a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 def get_precise_distance(sub_name, mark_name):
+    """
+    优先使用精确坐标库计算距离。
+    如果找不到，尝试模糊匹配。
+    """
+    # 1. 定义计算函数
+    def calc_dist(c1, c2):
+        if not c1 or not c2: return 0
+        return round(haversine(c1[1], c1[0], c2[1], c2[0]), 1)
+
+    # 2. 尝试获取坐标 (完全匹配)
     sub_coord = FARM_COORDS.get(sub_name)
     mark_coord = SLAUGHTERHOUSE_COORDS.get(mark_name)
-    if sub_coord and mark_coord: return round(haversine(sub_coord[1], sub_coord[0], mark_coord[1], mark_coord[0]), 1)
-    def find_keyword(name):
-        for city in CITY_COORDS.keys():
-            if city in str(name): return city
-        return None
-    kw1, kw2 = find_keyword(sub_name), find_keyword(mark_name)
-    if kw1 and kw2:
-        c1, c2 = CITY_COORDS[kw1], CITY_COORDS[kw2]
-        return round(haversine(c1[0], c1[1], c2[0], c2[1]), 1)
+    
+    # 3. 如果完全匹配成功
+    if sub_coord and mark_coord:
+        return calc_dist(sub_coord, mark_coord)
+    
+    # 4. 【核心升级】开启模糊匹配
+    # 只要字典里的键包含 Excel 里的名字，就算匹配成功
+    if not sub_coord:
+        for key in FARM_COORDS.keys():
+            # 如果 Excel名字 是 字典名字 的一部分 (例如 "内乡11场" 匹配 "内乡牧原11场生长场")
+            if sub_name in key: 
+                sub_coord = FARM_COORDS[key]
+                break
+    
+    if not mark_coord:
+        for key in SLAUGHTERHOUSE_COORDS.keys():
+            if mark_name in key:
+                mark_coord = SLAUGHTERHOUSE_COORDS[key]
+                break
+
+    # 5. 计算结果
+    if sub_coord and mark_coord:
+        return calc_dist(sub_coord, mark_coord)
+        
+    # 6. 兜底：如果还是找不到，返回 0
     return 0
 
 def extract_weight_smart(text):
@@ -107,10 +135,10 @@ def go_to_page(page_name):
     st.rerun()
 
 # ==========================================
-# 页面 A/B/C (保持简洁)
+# 页面 A/B/C (简洁版)
 # ==========================================
 if st.session_state.current_page == 'home':
-    st.markdown("<div style='text-align: center; padding: 40px 0;'><h1 style='font-size: 3rem; color: #FF4B4B;'>🐷 猪猪侠全力冲杀！</h1><p style='font-size: 1.2rem; color: #666;'>牧原生猪产业链智能决策系统 v20.0</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; padding: 40px 0;'><h1 style='font-size: 3rem; color: #FF4B4B;'>🐷 猪猪侠全力冲杀！</h1><p style='font-size: 1.2rem; color: #666;'>牧原生猪产业链智能决策系统 v21.0</p></div>", unsafe_allow_html=True)
     st.markdown("---")
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
@@ -134,30 +162,52 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (修复版 v20.1)
+# 页面 D: 销售全景 (公开分享 + 模糊运距版 v21.0)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
     if st.button("⬅️ 返回首页", key="back_a"): go_to_page('home')
     
-    st.markdown("### 数据上传与配置")
-    uploaded_files = st.file_uploader("📤 上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v23")
+    st.markdown("### 数据加载中...")
     
-    if uploaded_files:
+    # --- 核心逻辑：支持公开分享 ---
+    SHARED_FILE_NAME = "共享数据.xlsx"
+    
+    df_raw = None
+    data_source = "未知"
+
+    # 1. 尝试自动加载服务器上的共享文件 (所有人可见)
+    if os.path.exists(SHARED_FILE_NAME):
         try:
-            # --- 修复点：统一添加来源文件列 ---
+            df_raw = pd.read_excel(SHARED_FILE_NAME)
+            data_source = SHARED_FILE_NAME
+            st.success(f"✅ 已自动加载共享数据：{SHARED_FILE_NAME} (所有人可见)")
+        except Exception as e:
+            st.error(f"读取共享文件出错: {e}")
+    
+    # 2. 如果没有共享文件，则进入上传模式 (仅自己可见)
+    if df_raw is None:
+        st.markdown("#### 📤 数据上传 (仅自己可见)")
+        st.caption("提示：此处上传的数据仅您自己可见。若需分享给别人，请将文件放入项目文件夹命名为 '共享数据.xlsx'。")
+        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v21")
+        
+        if uploaded_files:
             df_list = []
             for f in uploaded_files:
                 temp = pd.read_excel(f)
-                temp['来源文件'] = f.name  # 确保每一行都有来源
+                temp['来源文件'] = f.name
                 df_list.append(temp)
             df_raw = pd.concat(df_list, ignore_index=True)
+            data_source = "手动上传"
+            st.info("✅ 数据已加载 (仅当前会话可见)")
+    
+    # --- 开始分析 ---
+    if df_raw is not None:
+        try:
+            # 补全来源列
+            if '来源文件' not in df_raw.columns: df_raw['来源文件'] = data_source
             
-            # 确保列存在 (防止concat时因某些情况丢失)
-            if '来源文件' not in df_raw.columns:
-                df_raw['来源文件'] = '未知文件'
-            
-            with st.expander("⚙️ 列名配置"):
+            with st.expander("⚙️ 列名配置", expanded=False):
                 df_raw.columns = [str(col).strip().replace('\n', '') for col in df_raw.columns]
                 cols = df_raw.columns.tolist()
                 def guess(kw): return next((c for c in cols if kw in c), None)
@@ -178,24 +228,22 @@ elif st.session_state.current_page == 'analysis':
             if sel_price != "无": df.rename(columns={sel_price:'单价'}, inplace=True); has_price = True
             else: df['单价'] = 0; has_price = False
             
-            # --- 修复点：增加异常捕获 ---
             try:
-                if sel_date == "来源文件名":
-                    df['日期'] = df['来源文件']
-                else:
-                    df['日期'] = df[sel_date]
-            except KeyError:
-                st.error(f"配置错误：找不到'{sel_date}'列，或'来源文件名'生成失败。已使用默认索引。")
-                df['日期'] = '默认日期'
+                if sel_date == "来源文件名": df['日期'] = df['来源文件']
+                else: df['日期'] = df[sel_date]
+            except: df['日期'] = '未知日期'
 
             df.dropna(subset=['客户姓名', '屠宰场'], inplace=True)
             df['总头数'] = pd.to_numeric(df['总头数'], errors='coerce').fillna(0)
             df['体重段'] = df[guess('体重')].apply(extract_weight_smart) if guess('体重') else '未知'
+            
+            # --- 核心调用：模糊匹配距离 ---
             df['运距'] = df.apply(lambda x: get_precise_distance(x.get('子公司',''), x['屠宰场']), axis=1)
+            
             df['采购类型'] = df.apply(lambda x: '直采' if x['客户姓名']==x['屠宰场'] else '中间商', axis=1)
             df['客户分类'] = df['客户姓名'].apply(classify_customer)
             
-            st.success("✅ 数据加载完成")
+            st.success("✅ 数据解析完成")
             
             # 筛选
             st.markdown("#### 🏭 屠宰场筛选")
@@ -267,7 +315,7 @@ elif st.session_state.current_page == 'analysis':
             
             st.markdown("**市场份额分布 (Top 10)**")
             valid_pie_data = market_stats_base[market_stats_base['总量'] > 0].sort_values('总量', ascending=False)
-            top_10 = valid_pie_data.head(10) # 定义 top_10
+            top_10 = valid_pie_data.head(10)
             
             if not valid_pie_data.empty:
                 pie_data = top_10.copy()
@@ -361,4 +409,6 @@ elif st.session_state.current_page == 'analysis':
             st.download_button("📥 导出Excel", buffer, "分析结果.xlsx")
 
         except Exception as e:
-            st.error(f"分析出错: {e}")
+            st.error(f"分析过程出错: {e}")
+    else:
+        st.info("👈 请在左侧上传数据，或将文件放入服务器等待自动加载。")
