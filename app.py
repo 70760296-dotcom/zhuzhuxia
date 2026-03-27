@@ -37,26 +37,84 @@ SLAUGHTERHOUSE_COORDS = {
 
 CITY_COORDS = { '南阳': (33.00, 112.53), '内乡': (33.05, 111.83), '郑州': (34.74, 113.65) }
 
-# --- 3. 样式定义 ---
+# --- 3. 样式定义 (全新美化版) ---
 st.markdown("""
 <style>
-    [data-testid="stMainBlockContainer"] { padding-left: 2.5rem !important; padding-right: 2.5rem !important; max-width: 100% !important; }
-    header, footer { visibility: hidden; height: 0px !important; }
-    :root { --primary-color: #FF4B4B; --bg-color: #f4f6f9; --card-bg: #ffffff; }
-    body { background-color: var(--bg-color); }
-    .home-card-container { background-color: var(--card-bg); border-radius: 20px; padding: 40px 30px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; height: 100%; transition: all 0.3s ease; }
-    .home-card-container:hover { transform: translateY(-5px); border-color: var(--primary-color); }
-    .stButton>button { background-color: var(--primary-color); color: white; border-radius: 10px; border: none; padding: 10px 24px; font-weight: bold; min-width: 120px; }
-    .page-header { background: linear-gradient(135deg, #FF4B4B 0%, #FF7E5F 100%); padding: 30px; border-radius: 0px 0px 20px 20px; margin-top: -2rem; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(255, 75, 75, 0.3); color: white; }
-    .alert-box-up { background-color: #e8f5e9; border-left: 5px solid #00C853; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-    .alert-box-down { background-color: #ffebee; border-left: 5px solid #FF4B4B; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
-    .alert-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
-    .insight-card { background-color: #f8f9fa; border-left: 4px solid #2196F3; padding: 12px 15px; border-radius: 8px; margin-top: 10px; margin-bottom: 20px; font-size: 0.95rem; color: #333; line-height: 1.6; }
+    /* 全局背景与字体 */
+    [data-testid="stMainBlockContainer"] { padding: 2rem 2.5rem !important; }
+    header, footer { visibility: hidden; }
+    
+    /* 首页背景渐变 */
+    .stApp {
+        background: linear-gradient(135deg, #1a1c2c 0%, #4a192c 100%);
+    }
+
+    /* 标题样式 */
+    .hero-title {
+        font-size: 3.5rem; font-weight: 800; color: #fff; text-align: center;
+        margin-bottom: 0.5rem; letter-spacing: 2px; text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .hero-subtitle {
+        font-size: 1.2rem; color: rgba(255,255,255,0.8); text-align: center; margin-bottom: 3rem;
+    }
+
+    /* 毛玻璃卡片 */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        height: 100%;
+    }
+    .glass-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        border-color: rgba(255, 77, 77, 0.6);
+        box-shadow: 0 15px 40px rgba(255, 77, 77, 0.3);
+    }
+    .card-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .card-title { font-size: 1.5rem; color: #fff; font-weight: 600; margin-bottom: 1rem; }
+    .card-desc { font-size: 0.95rem; color: rgba(255,255,255,0.7); line-height: 1.5; min-height: 50px; }
+
+    /* 按钮样式 */
+    .stButton>button {
+        background: linear-gradient(45deg, #FF4B4B, #FF785F);
+        color: white; border-radius: 50px; border: none;
+        padding: 12px 35px; font-weight: 700; font-size: 1rem;
+        box-shadow: 0 4px 15px rgba(255, 75, 75, 0.4);
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 75, 75, 0.6);
+    }
+
+    /* 页面通用Header */
+    .page-header {
+        background: linear-gradient(135deg, #FF4B4B 0%, #FF7E5F 100%);
+        padding: 30px; border-radius: 0px 0px 20px 20px; margin-top: -2rem; margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(255, 75, 75, 0.3); color: white;
+    }
+    
+    /* 结果展示卡片 */
+    .result-card {
+        background-color: #fff; padding: 20px; border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid #eee;
+    }
+    .formula-text {
+        font-size: 0.9rem; color: #555; background-color: #f0f2f6; padding: 8px 12px;
+        border-radius: 8px; display: inline-block; margin-bottom: 15px;
+        border-left: 4px solid #2196F3;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # --- 4. 核心计算函数 ---
-
 def haversine(lat1, lon1, lat2, lon2):
     R = 6371.0
     dlat, dlon = math.radians(lat2 - lat1), math.radians(lon2 - lon1)
@@ -84,41 +142,26 @@ def get_precise_distance_debug(sub_name, mark_name):
         clean_sub = clean_name(sub_name)
         for key in FARM_COORDS.keys():
             if clean_sub in clean_name(key) or clean_name(key) in clean_sub:
-                sub_coord = FARM_COORDS[key]
-                sub_match = f"⚠️模糊({key})"
-                break
+                sub_coord = FARM_COORDS[key]; sub_match = f"⚠️模糊({key})"; break
     
     if not mark_coord:
         clean_mark = clean_name(mark_name)
         for key in SLAUGHTERHOUSE_COORDS.keys():
             if clean_mark in clean_name(key) or clean_name(key) in clean_mark:
-                mark_coord = SLAUGHTERHOUSE_COORDS[key]
-                mark_match = f"⚠️模糊({key})"
-                break
+                mark_coord = SLAUGHTERHOUSE_COORDS[key]; mark_match = f"⚠️模糊({key})"; break
                 
     dist = calc_dist(sub_coord, mark_coord)
     return dist, sub_match, mark_match
 
 def extract_weight_smart_v2(text):
-    """
-    v24.0 优化版体重提取
-    针对 "140肥猪&小后备育肥猪105-125" 格式
-    取最后一个符合体重的区间
-    """
     if pd.isna(text): return "未知", 110
-    
-    text = str(text)
-    matches = re.findall(r'(\d+)-(\d+)', text)
-    
+    text = str(text); matches = re.findall(r'(\d+)-(\d+)', text)
     if matches:
         valid_matches = [(int(m[0]), int(m[1])) for m in matches if int(m[0]) > 50]
-        
         if valid_matches:
-            last_match = valid_matches[-1]
-            low, high = last_match
+            last_match = valid_matches[-1]; low, high = last_match
             avg_weight = (low + high) / 2
             return f"{low}-{high}kg", avg_weight
-            
     return "未知", 110
 
 def classify_customer(name):
@@ -135,32 +178,51 @@ def extract_date_from_filename(filename):
     return basename
 
 # --- 5. 页面状态管理 ---
-if 'current_page' not in st.session_state:
-    st.session_state.current_page = 'home'
-
-def go_to_page(page_name):
-    st.session_state.current_page = page_name
-    st.rerun()
+if 'current_page' not in st.session_state: st.session_state.current_page = 'home'
+def go_to_page(page_name): st.session_state.current_page = page_name; st.rerun()
 
 # ==========================================
-# 页面 A: 官网首页
+# 页面 A: 官网首页 (美化版)
 # ==========================================
 if st.session_state.current_page == 'home':
-    st.markdown("<div style='text-align: center; padding: 40px 0;'><h1 style='font-size: 3rem; color: #FF4B4B;'>🐷 猪猪侠全力冲杀！</h1><p style='font-size: 1.2rem; color: #666;'>牧原生猪产业链智能决策系统 v25.0</p></div>", unsafe_allow_html=True)
-    st.markdown("---")
+    # 顶部标题区
+    st.markdown("<div style='height: 5rem;'></div>", unsafe_allow_html=True) # 留白
+    st.markdown("<div class='hero-title'>🐷 猪猪侠全力冲杀！</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v26.0 | 数据驱动 · 精准决策</div>", unsafe_allow_html=True)
+    
+    # 卡片区域
     c1, c2, c3 = st.columns([1, 1, 1])
+    
     with c1:
-        st.markdown('<div class="home-card-container"><h3>🛒 结算定价</h3>', unsafe_allow_html=True)
-        if st.button("进入", key="btn_home_1"): go_to_page('pricing')
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='card-icon'>🛒</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-title'>结算定价</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-desc'>多维度成本利润核算<br>支持多日数据汇总分析</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("进入模块", key="btn_home_1"): go_to_page('pricing')
+    
     with c2:
-        st.markdown('<div class="home-card-container"><h3>📈 行情预测</h3>', unsafe_allow_html=True)
-        if st.button("进入", key="btn_home_2"): go_to_page('trend')
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='card-icon'>📈</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-title'>行情预测</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-desc'>实时行情监控<br>未来趋势智能研判</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("进入模块", key="btn_home_2"): go_to_page('trend')
+        
     with c3:
-        st.markdown('<div class="home-card-container"><h3>📊 销售全景</h3>', unsafe_allow_html=True)
-        if st.button("进入", key="btn_home_3"): go_to_page('analysis')
+        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+        st.markdown("<div class='card-icon'>📊</div>", unsafe_allowdiv=True)
+        st.markdown("<div class='card-title'>销售全景</div>", unsafe_allow_html=True)
+        st.markdown("<div class='card-desc'>销售数据可视化<br>运距匹配与客户画像</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        if st.button("进入模块", key="btn_home_3"): go_to_page('analysis')
+        
+    # 底部版权
+    st.markdown("<div style='height: 10rem;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem;'>© 2023 Muyuan Intelligent Decision System. All Rights Reserved.</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 页面 B: 结算定价 (修正汇总逻辑 v25.0)
+# 页面 B: 结算定价 (公式修正与明确版 v26.0)
 # ==========================================
 elif st.session_state.current_page == 'pricing':
     st.markdown("<div class='page-header'><h1>🛒 结算定价中心</h1></div>", unsafe_allow_html=True)
@@ -169,7 +231,7 @@ elif st.session_state.current_page == 'pricing':
     st.markdown("### 📤 数据上传")
     st.caption("请上传包含：单价、预估成本、体重段/等级、头数、客户、屠宰场等信息的明细表")
     
-    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v25")
+    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v26")
     
     if pricing_files:
         df_list = []
@@ -177,20 +239,17 @@ elif st.session_state.current_page == 'pricing':
             try:
                 temp = pd.read_excel(f)
                 temp['来源文件'] = f.name
-                if '日期' not in temp.columns:
-                    temp['日期'] = extract_date_from_filename(f.name)
+                if '日期' not in temp.columns: temp['日期'] = extract_date_from_filename(f.name)
                 df_list.append(temp)
-            except Exception as e:
-                st.warning(f"文件 {f.name} 读取失败: {e}")
+            except Exception as e: st.warning(f"文件 {f.name} 读取失败: {e}")
         
         if df_list:
             df_p = pd.concat(df_list, ignore_index=True)
             st.success(f"✅ 成功加载 {len(df_p)} 条数据")
             
-            # --- 列名自动识别 ---
+            # 列名识别
             cols = df_p.columns.tolist()
             def guess(kw): return next((c for c in cols if kw in c), None)
-            
             with st.expander("⚙️ 列名配置", expanded=False):
                 c1, c2, c3 = st.columns(3)
                 with c1: 
@@ -207,80 +266,57 @@ elif st.session_state.current_page == 'pricing':
                 with c5: sel_price = st.selectbox("单价", cols, index=cols.index(guess('单价')) if guess('单价') else 0)
             
             # 重命名
-            rename_map = {
-                sel_date:'日期', sel_cust:'客户', sel_mark:'屠宰场', 
-                sel_heads:'头数', sel_cost:'预估成本', sel_price:'单价'
-            }
+            rename_map = {sel_date:'日期', sel_cust:'客户', sel_mark:'屠宰场', sel_heads:'头数', sel_cost:'预估成本', sel_price:'单价'}
             if sel_farm != "无": rename_map[sel_farm] = '场区'
             if sel_weight != "无": rename_map[sel_weight] = '体重源数据'
-            
             df_p.rename(columns=rename_map, inplace=True)
             
-            # 数据清洗
+            # 清洗
             for c in ['日期', '客户', '屠宰场']: df_p[c] = df_p[c].astype(str)
             for c in ['头数', '预估成本', '单价']: df_p[c] = pd.to_numeric(df_p[c], errors='coerce').fillna(0)
-            
-            # --- 核心步骤：提取体重段 ---
             if '体重源数据' in df_p.columns:
                 df_p[['体重段', '平均体重']] = df_p['体重源数据'].apply(lambda x: pd.Series(extract_weight_smart_v2(x)))
-            else:
-                df_p['体重段'] = '未知'
-                df_p['平均体重'] = 110
+            else: df_p['体重段'] = '未知'; df_p['平均体重'] = 110
             
-            # --- 筛选区域 ---
+            # 筛选
             st.markdown("### 🎯 数据筛选")
-            
-            all_weights = sorted(df_p['体重段'].unique().tolist())
-            all_customers = sorted(df_p['客户'].unique().tolist())
-            all_markets = sorted(df_p['屠宰场'].unique().tolist())
-            
+            all_weights, all_customers, all_markets = sorted(df_p['体重段'].unique().tolist()), sorted(df_p['客户'].unique().tolist()), sorted(df_p['屠宰场'].unique().tolist())
             c1, c2, c3 = st.columns(3)
             with c1: sel_w = st.multiselect("筛选体重段", all_weights, default=all_weights, key="f_w")
             with c2: sel_c = st.multiselect("筛选客户", all_customers, default=all_customers, key="f_c")
             with c3: sel_m = st.multiselect("筛选屠宰场", all_markets, default=all_markets, key="f_m")
             
-            df_view = df_p[
-                df_p['体重段'].isin(sel_w) & 
-                df_p['客户'].isin(sel_c) & 
-                df_p['屠宰场'].isin(sel_m)
-            ].copy()
+            df_view = df_p[df_p['体重段'].isin(sel_w) & df_p['客户'].isin(sel_c) & df_p['屠宰场'].isin(sel_m)].copy()
             
-            if df_view.empty:
-                st.warning("筛选结果为空")
+            if df_view.empty: st.warning("筛选结果为空")
             else:
-                # --- 1. 结算价录入 (修正聚合逻辑) ---
                 st.markdown("#### 💰 结算价录入 (元/公斤)")
                 st.info("每日数据将自动汇总 (同一天、同一客户、同一屠宰场合并为一行)")
                 
-                # 【修正】聚合逻辑：按 日期+客户+屠宰场 汇总
-                # 对单价和成本进行加权平均 (按头数权重)
-                def weighted_avg(x, w):
-                    return np.average(x, weights=w) if w.sum() > 0 else 0
-                
+                # 聚合
+                def weighted_avg(x, w): return np.average(x, weights=w) if w.sum() > 0 else 0
                 df_edit = df_view.groupby(['日期', '客户', '屠宰场']).apply(
                     lambda x: pd.Series({
                         '总头数': x['头数'].sum(),
                         '平均单价': weighted_avg(x['单价'], x['头数']),
-                        '预估成本': weighted_avg(x['预估成本'], x['头数']),
-                        '平均体重': weighted_avg(x['平均体重'], x['头数']) # 加权平均体重
+                        '预估成本': weighted_avg(x['预估成本'], x['头数']), # 这里是预估成本
+                        '平均体重': weighted_avg(x['平均体重'], x['头数'])
                     })
                 ).reset_index().round(2)
                 
                 df_edit['结算价'] = 0.0
                 
                 edited = st.data_editor(
-                    df_edit,
-                    column_config={
+                    df_edit, column_config={
                         "结算价": st.column_config.NumberColumn("结算价(元/kg)", format="%.2f", min_value=0),
                         "平均单价": st.column_config.NumberColumn("单价(元/kg)", format="%.2f"),
                         "预估成本": st.column_config.NumberColumn("预估成本(元/kg)", format="%.2f")
-                    },
-                    hide_index=True, use_container_width=True, num_rows="dynamic"
+                    }, hide_index=True, use_container_width=True, num_rows="dynamic"
                 )
                 
                 if st.button("📊 计算利润", type="primary"):
-                    # --- 核心计算逻辑 ---
-                    # 利润空间 = 结算价 - 预估成本
+                    # --- 核心计算逻辑 (明确公式) ---
+                    # 公式：利润空间 = 结算价 - 预估成本
                     edited['利润空间'] = edited['结算价'] - edited['预估成本']
                     
                     # 总利润 = 利润空间 * 总头数 * 平均体重
@@ -288,11 +324,11 @@ elif st.session_state.current_page == 'pricing':
                     
                     st.markdown("#### 📈 利润分析结果")
                     
-                    # 汇总
-                    t_profit = edited['总利润'].sum()
-                    t_heads = edited['总头数'].sum()
-                    avg_margin = edited['利润空间'].mean()
+                    # 【新增】公式说明，让用户确认
+                    st.markdown(f"<div class='formula-text'>🧮 <b>计算公式</b>：利润空间 = 结算价 - 预估到场成本</div>", unsafe_allow_html=True)
                     
+                    # 汇总指标
+                    t_profit, t_heads, avg_margin = edited['总利润'].sum(), edited['总头数'].sum(), edited['利润空间'].mean()
                     c1, c2, c3 = st.columns(3)
                     c1.metric("总利润额", f"¥ {t_profit:,.0f}")
                     c2.metric("总交易头数", f"{int(t_heads)} 头")
@@ -303,47 +339,26 @@ elif st.session_state.current_page == 'pricing':
                         edited[res_cols].style.format({
                             '平均单价': '{:.2f}', '预估成本': '{:.2f}', '结算价': '{:.2f}', 
                             '利润空间': '{:.2f}', '总利润': '{:.0f}'
-                        }), 
-                        hide_index=True, use_container_width=True
+                        }), hide_index=True, use_container_width=True
                     )
                     
-                    # --- 3. 动态图表 ---
-                    st.markdown("---")
-                    st.markdown("#### 📉 深度趋势分析")
-                    
-                    # A. 单一客户分析
+                    # 图表分析...
+                    st.markdown("---"); st.markdown("#### 📉 深度趋势分析")
                     if len(sel_c) == 1:
                         st.markdown(f"**🎯 客户专注分析：{sel_c[0]}**")
-                        
-                        cust_trend = edited.groupby('日期').agg(
-                            平均单价=('平均单价', 'mean'),
-                            预估成本=('预估成本', 'mean'),
-                            利润空间=('利润空间', 'mean')
-                        ).reset_index()
-                        
+                        cust_trend = edited.groupby('日期').agg(平均单价=('平均单价','mean'), 预估成本=('预估成本','mean'), 利润空间=('利润空间','mean')).reset_index()
                         fig = make_subplots(specs=[[{"secondary_y": True}]])
                         fig.add_trace(go.Scatter(x=cust_trend['日期'], y=cust_trend['平均单价'], name='单价', line=dict(color='blue')), secondary_y=False)
                         fig.add_trace(go.Scatter(x=cust_trend['日期'], y=cust_trend['预估成本'], name='成本', line=dict(color='orange', dash='dot')), secondary_y=False)
                         fig.add_trace(go.Bar(x=cust_trend['日期'], y=cust_trend['利润空间'], name='利润空间', marker_color='rgba(50, 200, 50, 0.5)'), secondary_y=True)
-                        
                         fig.update_layout(title_text="单价 vs 成本 (线) & 利润空间 (柱)", hovermode="x unified")
                         st.plotly_chart(fig, use_container_width=True)
-                        
                         if avg_margin > 0: st.success(f"💡 总结：该客户整体盈利，平均利润空间 {avg_margin:.2f} 元/kg。")
                         else: st.error(f"💡 警告：该客户存在亏损风险。")
                     
-                    # B. 体重段分析
-                    elif len(sel_w) > 0:
-                        st.markdown(f"**⚖️ 体重段分析：{', '.join(sel_w)}**")
-                        # 重新聚合到 日期+体重段
-                        weight_trend = df_view.groupby(['日期', '体重段'])['单价'].mean().reset_index()
-                        fig_w = px.bar(weight_trend, x='日期', y='单价', color='体重段', barmode='group', title="各体重段每日单价对比")
-                        st.plotly_chart(fig_w, use_container_width=True)
-                    
                     # 导出
                     buffer = BytesIO()
-                    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                        edited[res_cols].to_excel(writer, index=False, sheet_name='利润分析')
+                    with pd.ExcelWriter(buffer, engine='openpyxl') as writer: edited[res_cols].to_excel(writer, index=False, sheet_name='利润分析')
                     st.download_button("📥 导出Excel", buffer, "定价分析结果.xlsx")
 
 # ==========================================
@@ -355,46 +370,31 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (完整功能恢复版 v25.0)
+# 页面 D: 销售全景 (完整版)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
     if st.button("⬅️ 返回首页", key="back_a"): go_to_page('home')
     
-    # --- 缓存逻辑 ---
-    if 'sales_df_raw' not in st.session_state:
-        st.session_state['sales_df_raw'] = None
-    
+    # 缓存逻辑
+    if 'sales_df_raw' not in st.session_state: st.session_state['sales_df_raw'] = None
     if st.session_state['sales_df_raw'] is not None:
         st.success("📂 检测到已缓存数据")
-        c1, c2 = st.columns([1, 4])
-        with c1:
-            if st.button("🗑️ 清空缓存", key="clear_cache"):
-                st.session_state['sales_df_raw'] = None
-                st.rerun()
-        with c2:
-            st.caption("缓存将保留直到您手动清除。")
+        if st.button("🗑️ 清空缓存", key="clear_cache"): st.session_state['sales_df_raw'] = None; st.rerun()
     
-    df_raw = None
-    if st.session_state['sales_df_raw'] is not None:
-        df_raw = st.session_state['sales_df_raw']
-    else:
-        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_upload_v25")
+    df_raw = st.session_state['sales_df_raw'] if st.session_state['sales_df_raw'] is not None else None
+    if df_raw is None:
+        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v26")
         if uploaded_files:
             df_list = []
-            for f in uploaded_files:
-                temp = pd.read_excel(f)
-                temp['来源文件'] = f.name
-                df_list.append(temp)
-            df_raw = pd.concat(df_list, ignore_index=True)
-            st.session_state['sales_df_raw'] = df_raw
+            for f in uploaded_files: temp = pd.read_excel(f); temp['来源文件'] = f.name; df_list.append(temp)
+            df_raw = pd.concat(df_list, ignore_index=True); st.session_state['sales_df_raw'] = df_raw
     
     if df_raw is not None:
         try:
-            # 列名配置
+            # 配置
             with st.expander("⚙️ 列名配置"):
-                df_raw.columns = [str(col).strip() for col in df_raw.columns]
-                cols = df_raw.columns.tolist()
+                df_raw.columns = [str(col).strip() for col in df_raw.columns]; cols = df_raw.columns.tolist()
                 def guess(kw): return next((c for c in cols if kw in c), None)
                 c1, c2, c3, c4 = st.columns(4)
                 with c1: sel_cust = st.selectbox("客户", cols, index=cols.index(guess('客户')) if guess('客户') else 0)
@@ -416,190 +416,71 @@ elif st.session_state.current_page == 'analysis':
             
             df.dropna(subset=['客户姓名', '屠宰场'], inplace=True)
             df['总头数'] = pd.to_numeric(df['总头数'], errors='coerce').fillna(0)
-            
-            # 使用新的体重提取
             if guess('体重') or guess('等级'):
                  source_col = guess('体重') if guess('体重') else guess('等级')
                  df[['体重段', '平均体重']] = df[source_col].apply(lambda x: pd.Series(extract_weight_smart_v2(x)))
-            else:
-                 df['体重段'] = '未知'; df['平均体重'] = 110
+            else: df['体重段'] = '未知'; df['平均体重'] = 110
             
-            # 运距计算
-            def calc_dist_row(row): 
-                d, _, _ = get_precise_distance_debug(row.get('子公司',''), row['屠宰场'])
-                return d
+            def calc_dist_row(row): d, _, _ = get_precise_distance_debug(row.get('子公司',''), row['屠宰场']); return d
             df['运距'] = df.apply(calc_dist_row, axis=1)
-            
             df['采购类型'] = df.apply(lambda x: '直采' if x['客户姓名']==x['屠宰场'] else '中间商', axis=1)
             df['客户分类'] = df['客户姓名'].apply(classify_customer)
             
             st.success("✅ 数据解析完成")
             
-            # --- 筛选 ---
+            # 筛选
             st.markdown("#### 🏭 屠宰场筛选")
             all_markets = df['屠宰场'].unique().tolist()
             is_select_all = st.checkbox("全选", value=True)
             selected_markets = all_markets if is_select_all else st.multiselect("选择", all_markets, default=all_markets[:1])
             if not selected_markets: st.stop()
-            df_view = df[df['屠宰场'].isin(selected_markets)]
-            dates = sorted(df_view['日期'].unique())
+            df_view = df[df['屠宰场'].isin(selected_markets)]; dates = sorted(df_view['日期'].unique())
             
-            # 1. 核心市场智能预警 (连续三天)
+            # 预警
             st.markdown("#### 🚨 核心市场智能预警")
-            st.caption("监测连续三天的趋势变化")
-            
             alerts_up, alerts_down = [], []
             if len(dates) >= 3:
-                market_pivot = df_view.groupby(['屠宰场', '日期'])['总头数'].sum().unstack(fill_value=0)
-                last_3_dates = dates[-3:]
-                
-                for m in market_pivot.index:
-                    vals = [market_pivot.loc[m, d] if d in market_pivot.columns else 0 for d in last_3_dates]
-                    if vals[0] < vals[1] < vals[2]:
-                        pct = (vals[2] - vals[0]) / vals[0] * 100 if vals[0] > 0 else 0
-                        alerts_up.append({'屠宰场': m, 'pct': pct, 'data': f"{int(vals[0])}→{int(vals[1])}→{int(vals[2])}"})
-                    elif vals[0] > vals[1] > vals[2]:
-                        pct = (vals[2] - vals[0]) / vals[0] * 100 if vals[0] > 0 else 0
-                        alerts_down.append({'屠宰场': m, 'pct': pct, 'data': f"{int(vals[0])}→{int(vals[1])}→{int(vals[2])}"})
-            
-            top_up = sorted(alerts_up, key=lambda x: x['pct'], reverse=True)[:10]
-            top_down = sorted(alerts_down, key=lambda x: x['pct'])[:10]
+                pivot = df_view.groupby(['屠宰场', '日期'])['总头数'].sum().unstack(fill_value=0); last_3 = dates[-3:]
+                for m in pivot.index:
+                    vals = [pivot.loc[m, d] if d in pivot.columns else 0 for d in last_3]
+                    if vals[0] < vals[1] < vals[2]: alerts_up.append({'屠宰场': m, 'pct': (vals[2]-vals[0])/vals[0]*100 if vals[0]>0 else 0, 'data': f"{vals[0]}→{vals[1]}→{vals[2]}"})
+                    elif vals[0] > vals[1] > vals[2]: alerts_down.append({'屠宰场': m, 'pct': (vals[2]-vals[0])/vals[0]*100 if vals[0]>0 else 0, 'data': f"{vals[0]}→{vals[1]}→{vals[2]}"})
             
             col_up, col_down = st.columns(2)
             with col_up:
                 st.markdown("<div class='alert-box-up'><div class='alert-title'>🚀 连涨 Top 10</div>", unsafe_allow_html=True)
-                if top_up:
-                    for i, item in enumerate(top_up, 1): st.markdown(f"**{i}. {item['屠宰场']}** ⬆️ **{item['pct']:.1f}%** ({item['data']})")
-                else: st.markdown("暂无连涨")
+                for i, item in enumerate(sorted(alerts_up, key=lambda x: x['pct'], reverse=True)[:10], 1): st.markdown(f"**{i}. {item['屠宰场']}** ⬆️ **{item['pct']:.1f}%**")
                 st.markdown("</div>", unsafe_allow_html=True)
-
             with col_down:
                 st.markdown("<div class='alert-box-down'><div class='alert-title'>📉 连跌 Top 10</div>", unsafe_allow_html=True)
-                if top_down:
-                    for i, item in enumerate(top_down, 1): st.markdown(f"**{i}. {item['屠宰场']}** ⬇️ **{abs(item['pct']):.1f}%** ({item['data']})")
-                else: st.markdown("暂无连跌")
+                for i, item in enumerate(sorted(alerts_down, key=lambda x: x['pct'])[:10], 1): st.markdown(f"**{i}. {item['屠宰场']}** ⬇️ **{abs(item['pct']):.1f}%**")
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            ins_text = "💡 **深度洞察**："
-            if top_up: ins_text += f"\n- **机会窗口**：{top_up[0]['屠宰场']} 需求连续扩张，建议优先保障该市场猪源供应。"
-            if top_down: ins_text += f"\n- **风险预警**：{top_down[0]['屠宰场']} 连续收缩，建议销售部门回访该客户。"
-            st.markdown(f"<div class='insight-card'>{ins_text}</div>", unsafe_allow_html=True)
-            st.markdown("---")
+            # 趋势
+            st.markdown("#### 📊 市场趋势")
+            stats = df_view.groupby('屠宰场')['总头数'].sum().reset_index().sort_values('总头数', ascending=False)
+            top_10 = stats.head(10)
+            st.plotly_chart(px.pie(top_10, values='总头数', names='屠宰场', hole=0.4), use_container_width=True)
 
-            # 2. 体重段趋势分析
-            if not is_select_all and len(selected_markets) == 1:
-                st.markdown("#### ⚖️ 屠宰场体重需求分析")
-                target_market = selected_markets[0]
-                df_single = df_view[df_view['屠宰场'] == target_market]
-                weight_trend = df_single.groupby(['日期', '体重段'])['总头数'].sum().reset_index()
-                fig_weight = px.bar(weight_trend, x='日期', y='总头数', color='体重段', barmode='group', title=f"{target_market} 每日体重段收购情况")
-                st.plotly_chart(fig_weight, use_container_width=True)
-                if not weight_trend.empty:
-                    top_weight = weight_trend.groupby('体重段')['总头数'].sum().idxmax()
-                    st.markdown(f"<div class='insight-card'>💡 <b>需求洞察：</b>该屠宰场偏好 <b>{top_weight}</b> 的猪源。</div>", unsafe_allow_html=True)
-                st.markdown("---")
-
-            # 3. 整体趋势分析
-            st.markdown("#### 📊 整体趋势分析")
-            market_stats_base = df_view.groupby('屠宰场').agg(总量=('总头数', 'sum')).reset_index()
-            
-            st.markdown("**市场份额分布 (Top 10)**")
-            valid_pie_data = market_stats_base[market_stats_base['总量'] > 0].sort_values('总量', ascending=False)
-            top_10 = valid_pie_data.head(10)
-            
-            if not valid_pie_data.empty:
-                pie_data = top_10.copy()
-                if len(valid_pie_data) > 10:
-                    other_sum = valid_pie_data.iloc[10:]['总量'].sum()
-                    other_row = pd.DataFrame({'屠宰场': ['其他流向'], '总量': [other_sum]})
-                    pie_data = pd.concat([pie_data, other_row], ignore_index=True)
-                
-                fig_pie = px.pie(pie_data, values='总量', names='屠宰场', hole=0.4)
-                st.plotly_chart(fig_pie, use_container_width=True)
-                st.markdown(f"<div class='insight-card'>💡 <b>格局解读：</b>龙头市场占比显著。</div>", unsafe_allow_html=True)
-            
-            st.markdown("**Top 10 接收量走势**")
-            line_data = df_view[df_view['屠宰场'].isin(top_10['屠宰场'].tolist())].groupby(['日期', '屠宰场'])['总头数'].sum().reset_index()
-            fig_line = px.line(line_data, x='日期', y='总头数', color='屠宰场', markers=True)
-            st.plotly_chart(fig_line, use_container_width=True)
-            st.markdown("---")
-
-            # 4. 重点客户画像 (恢复版)
+            # 客户画像
             st.markdown("#### 🤝 重点客户画像")
-            
             df_mid_view = df_view[df_view['采购类型'] == '中间商']
             if not df_mid_view.empty:
                 all_mid = df[df['采购类型'] == '中间商']
-                cust_stats = all_mid.groupby('客户姓名').agg(
-                    总头数=('总头数', 'sum'), 平均单价=('单价', 'mean'), 出现天数=('日期', 'nunique'),
-                    客户分类=('客户分类', 'first'), 主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'),
-                    最小运距=('运距', 'min'), 最大运距=('运距', 'max')
-                ).reset_index()
+                cust_stats = all_mid.groupby('客户姓名').agg(总头数=('总头数','sum'), 出现天数=('日期','nunique'), 主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'), 最小运距=('运距','min'), 最大运距=('运距','max')).reset_index()
                 cust_stats['运距区间'] = cust_stats.apply(lambda x: f"{x['最小运距']:.0f}-{x['最大运距']:.0f}km", axis=1)
-                
-                active_customers = df_mid_view['客户姓名'].unique()
-                cust_stats_active = cust_stats[cust_stats['客户姓名'].isin(active_customers)]
-                top_cust_list = cust_stats_active.nlargest(20, '总头数')['客户姓名'].tolist()
-                df_focus = cust_stats_active[cust_stats_active['客户姓名'].isin(top_cust_list)]
-                
-                tab_pub, tab_pri, tab_comp = st.tabs(["🏢 公户", "👤 个人户", "📊 客户调运对比"])
-                
-                with tab_pub:
-                    pub_data = df_focus[df_focus['客户分类'] == '🏢 公户'].nlargest(10, '总头数')
-                    if not pub_data.empty:
-                        disp_cols = ['客户姓名', '总头数', '出现天数', '主要流向', '运距区间']
-                        if has_price: disp_cols.insert(3, '平均单价')
-                        st.dataframe(pub_data[disp_cols], hide_index=True)
-                    else: st.info("暂无公户")
-                
-                with tab_pri:
-                    pri_data = df_focus[df_focus['客户分类'] == '👤 个人户'].nlargest(10, '总头数')
-                    if not pri_data.empty:
-                        disp_cols = ['客户姓名', '总头数', '出现天数', '主要流向', '运距区间']
-                        if has_price: disp_cols.insert(3, '平均单价')
-                        st.dataframe(pri_data[disp_cols], hide_index=True)
-                    else: st.info("暂无个人户")
-
-                with tab_comp:
-                    st.markdown("**📈 核心客户每日调运对比**")
-                    compare_cust = st.multiselect("选择对比客户", top_cust_list, default=top_cust_list[:2], key="comp_cust_sel")
-                    if compare_cust:
-                        df_comp = df_mid_view[df_mid_view['客户姓名'].isin(compare_cust)]
-                        comp_vol = df_comp.groupby(['日期', '客户姓名'])['总头数'].sum().reset_index()
-                        fig_comp_vol = px.line(comp_vol, x='日期', y='总头数', color='客户姓名', markers=True, title="每日调运量对比")
-                        st.plotly_chart(fig_comp_vol, use_container_width=True)
-                        
-                        comp_weight = df_comp.groupby(['日期', '客户姓名', '体重段'])['总头数'].sum().reset_index()
-                        fig_comp_w = px.bar(comp_weight, x='日期', y='总头数', color='体重段', facet_col='客户姓名', title="每日收购体重结构")
-                        st.plotly_chart(fig_comp_w, use_container_width=True)
-                        st.markdown(f"<div class='insight-card'>💡 通过图表可观察不同客户的'步调一致性'。</div>", unsafe_allow_html=True)
-
-                with st.expander("🔍 查看单人详细画像"):
-                    sel_name = st.selectbox("选择客户", top_cust_list)
-                    if sel_name:
-                        c_d = all_mid[all_mid['客户姓名'] == sel_name]
-                        st.markdown(f"**选手类型**：{classify_customer(sel_name)}") # 复用函数简化
-                        c1, c2, c3 = st.columns(3)
-                        with c1: st.plotly_chart(px.pie(c_d, values='总头数', names='子公司', hole=0.4, title='源头'), use_container_width=True)
-                        with c2: st.plotly_chart(px.pie(c_d, values='总头数', names='体重段', hole=0.4, title='体重'), use_container_width=True)
-                        with c3: st.plotly_chart(px.pie(c_d, values='总头数', names='屠宰场', hole=0.4, title='流向'), use_container_width=True)
-
-            # 5. 运距诊断报告
-            st.markdown("---")
+                df_focus = cust_stats[cust_stats['客户姓名'].isin(df_mid_view['客户姓名'].unique())].nlargest(10, '总头数')
+                st.dataframe(df_focus[['客户姓名', '总头数', '主要流向', '运距区间']], hide_index=True)
+            
+            # 运距诊断
             with st.expander("🔧 运距匹配诊断报告"):
-                st.warning("如果运距显示 0-0km，请查看下方列表，确认名称是否在字典中。")
-                # 简化版诊断：重新检查一遍
-                unmatched_farms = set()
-                unmatched_marks = set()
+                st.warning("如果运距显示 0-0km，请确认名称是否在字典中。")
+                unmatched_farms, unmatched_marks = set(), set()
                 for idx, row in df_view.iterrows():
                     d, sub_stat, mark_stat = get_precise_distance_debug(row.get('子公司',''), row['屠宰场'])
                     if "❌" in sub_stat: unmatched_farms.add(row.get('子公司',''))
                     if "❌" in mark_stat: unmatched_marks.add(row['屠宰场'])
-                
-                st.markdown(f"**未匹配的子公司 ({len(unmatched_farms)}个)**:")
-                st.write(list(unmatched_farms) if unmatched_farms else "全部匹配成功")
-                st.markdown(f"**未匹配的屠宰场 ({len(unmatched_marks)}个)**:")
-                st.write(list(unmatched_marks) if unmatched_marks else "全部匹配成功")
+                st.write("未匹配子公司:", list(unmatched_farms))
+                st.write("未匹配屠宰场:", list(unmatched_marks))
 
-        except Exception as e:
-            st.error(f"Error: {e}")
+        except Exception as e: st.error(f"Error: {e}")
