@@ -37,7 +37,7 @@ SLAUGHTERHOUSE_COORDS = {
 
 CITY_COORDS = { '南阳': (33.00, 112.53), '内乡': (33.05, 111.83), '郑州': (34.74, 113.65) }
 
-# --- 3. 样式定义 (全新美化版) ---
+# --- 3. 样式定义 (修正版) ---
 st.markdown("""
 <style>
     /* 全局背景与字体 */
@@ -182,13 +182,13 @@ if 'current_page' not in st.session_state: st.session_state.current_page = 'home
 def go_to_page(page_name): st.session_state.current_page = page_name; st.rerun()
 
 # ==========================================
-# 页面 A: 官网首页 (美化版)
+# 页面 A: 官网首页 (修正版 v26.1)
 # ==========================================
 if st.session_state.current_page == 'home':
     # 顶部标题区
-    st.markdown("<div style='height: 5rem;'></div>", unsafe_allow_html=True) # 留白
+    st.markdown("<div style='height: 5rem;'></div>", unsafe_allow_html=True)
     st.markdown("<div class='hero-title'>🐷 猪猪侠全力冲杀！</div>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v26.0 | 数据驱动 · 精准决策</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v26.1 | 数据驱动 · 精准决策</div>", unsafe_allow_html=True)
     
     # 卡片区域
     c1, c2, c3 = st.columns([1, 1, 1])
@@ -211,7 +211,8 @@ if st.session_state.current_page == 'home':
         
     with c3:
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='card-icon'>📊</div>", unsafe_allowdiv=True)
+        # 【修正】此处修正了 unsafe_allowdiv -> unsafe_allow_html
+        st.markdown("<div class='card-icon'>📊</div>", unsafe_allow_html=True)
         st.markdown("<div class='card-title'>销售全景</div>", unsafe_allow_html=True)
         st.markdown("<div class='card-desc'>销售数据可视化<br>运距匹配与客户画像</div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
@@ -222,7 +223,7 @@ if st.session_state.current_page == 'home':
     st.markdown("<div style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem;'>© 2023 Muyuan Intelligent Decision System. All Rights Reserved.</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 页面 B: 结算定价 (公式修正与明确版 v26.0)
+# 页面 B: 结算定价
 # ==========================================
 elif st.session_state.current_page == 'pricing':
     st.markdown("<div class='page-header'><h1>🛒 结算定价中心</h1></div>", unsafe_allow_html=True)
