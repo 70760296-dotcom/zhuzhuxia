@@ -159,7 +159,7 @@ def go_to_page(page_name): st.session_state.current_page = page_name; st.rerun()
 if st.session_state.current_page == 'home':
     st.markdown("<div style='height: 5rem;'></div>", unsafe_allow_html=True)
     st.markdown("<div class='hero-title'>🐷 猪猪侠全力冲杀！</div>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v29.0 | 深度洞察 · 决策辅助</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v30.0 | 深度洞察 · 决策辅助</div>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1, 1])
     
@@ -191,14 +191,14 @@ if st.session_state.current_page == 'home':
     st.markdown("<div style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem;'>© 2023 Muyuan Intelligent Decision System.</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 页面 B: 结算定价 (加权平均 + 智能决策版 v29.0)
+# 页面 B: 结算定价 (加权平均 + 智能决策版 v30.0)
 # ==========================================
 elif st.session_state.current_page == 'pricing':
     st.markdown("<div class='page-header'><h1>🛒 结算定价中心</h1></div>", unsafe_allow_html=True)
     if st.button("⬅️ 返回"): go_to_page('home')
     
     st.markdown("### 📤 数据上传")
-    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v29")
+    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v30")
     
     if pricing_files:
         df_list = []
@@ -374,7 +374,7 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (深度趋势建议版 v29.0)
+# 页面 D: 销售全景 (深度趋势建议修复版 v30.0)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
@@ -388,7 +388,7 @@ elif st.session_state.current_page == 'analysis':
     
     df_raw = st.session_state['sales_df_raw'] if st.session_state['sales_df_raw'] is not None else None
     if df_raw is None:
-        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v29")
+        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v30")
         if uploaded_files:
             df_list = []
             for f in uploaded_files: temp = pd.read_excel(f); temp['来源文件'] = f.name; df_list.append(temp)
@@ -483,7 +483,7 @@ elif st.session_state.current_page == 'analysis':
             fig_line = px.line(line_data, x='日期', y='总头数', color='屠宰场', markers=True)
             st.plotly_chart(fig_line, use_container_width=True)
             
-            # === 新增：深度趋势综合指导意见 ===
+            # === 深度趋势综合指导意见 (修复版) ===
             st.markdown("#### 📈 深度趋势综合指导意见")
             insights = []
             
@@ -496,9 +496,11 @@ elif st.session_state.current_page == 'analysis':
                 if cr3 > 70:
                     insights.append(f"🔹 **市场集中度极高 (CR3={cr3:.1f}%)**：前三名客户占据主导地位。建议作为VIP重点维护，保障核心销量。")
                 elif cr3 < 40:
+                    # 修复：添加了闭合括号 }
                     insights.append(f"🔹 **市场分散 (CR3={cr3:.1f}%)**：客户分布均匀，尚未形成绝对核心。建议寻找增长点，培育大客户。")
                 else:
-                    insights.append(f"🔹 **市场结构均衡 (CR3={cr3:.1f%)**：既有核心支撑，又有广泛基础。维持现状，稳中求进。")
+                    # 修复：添加了闭合括号 }
+                    insights.append(f"🔹 **市场结构均衡 (CR3={cr3:.1f}%)**：既有核心支撑，又有广泛基础。维持现状，稳中求进。")
             
             # 2. 增长趋势分析
             if len(dates) >= 7:
@@ -536,7 +538,7 @@ elif st.session_state.current_page == 'analysis':
             
             st.markdown("---")
 
-            # 4. 重点客户画像 (修复版 v28.1)
+            # 4. 重点客户画像 (修复版)
             st.markdown("#### 🤝 重点客户画像")
             df_mid_view = df_view[df_view['采购类型'] == '中间商']
             if not df_mid_view.empty:
