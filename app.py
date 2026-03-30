@@ -159,7 +159,7 @@ def go_to_page(page_name): st.session_state.current_page = page_name; st.rerun()
 if st.session_state.current_page == 'home':
     st.markdown("<div style='height: 5rem;'></div>", unsafe_allow_html=True)
     st.markdown("<div class='hero-title'>🐷 猪猪侠全力冲杀！</div>", unsafe_allow_html=True)
-    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v31.0 | 深度洞察 · 决策辅助</div>", unsafe_allow_html=True)
+    st.markdown("<div class='hero-subtitle'>牧原生猪产业链智能决策系统 v32.0 | 深度洞察 · 决策辅助</div>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1, 1, 1])
     
@@ -191,14 +191,14 @@ if st.session_state.current_page == 'home':
     st.markdown("<div style='text-align: center; color: rgba(255,255,255,0.4); font-size: 0.8rem;'>© 2023 Muyuan Intelligent Decision System.</div>", unsafe_allow_html=True)
 
 # ==========================================
-# 页面 B: 结算定价 (加权平均 + 智能决策版 v31.0)
+# 页面 B: 结算定价 (加权平均 + 智能决策版 v32.0)
 # ==========================================
 elif st.session_state.current_page == 'pricing':
     st.markdown("<div class='page-header'><h1>🛒 结算定价中心</h1></div>", unsafe_allow_html=True)
     if st.button("⬅️ 返回"): go_to_page('home')
     
     st.markdown("### 📤 数据上传")
-    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v31")
+    pricing_files = st.file_uploader("上传数据", type=['xlsx', 'xls'], accept_multiple_files=True, key="pricing_v32")
     
     if pricing_files:
         df_list = []
@@ -323,7 +323,7 @@ elif st.session_state.current_page == 'pricing':
                         st.markdown(f"<div class='insight-card'>{'<br>'.join(analysis)}</div>", unsafe_allow_html=True)
                     else: st.info("数据不足。")
 
-                    # --- 3. 深度趋势分析 + 智能综合指导 (新增) ---
+                    # --- 3. 深度趋势分析 + 智能综合指导 (保留) ---
                     st.markdown("---")
                     st.markdown("#### 📉 深度趋势分析")
                     if len(sel_c) == 1:
@@ -335,11 +335,9 @@ elif st.session_state.current_page == 'pricing':
                         fig.update_layout(title_text="单价 vs 成本 (线) & 利润空间 (柱)", hovermode="x unified")
                         st.plotly_chart(fig, use_container_width=True)
                         
-                        # === 新增：利润分析综合指导 ===
+                        # === 利润分析综合指导 (保留) ===
                         st.markdown("#### 💡 利润分析与操作建议")
                         insight_list = []
-                        
-                        # 1. 趋势诊断
                         if len(cust_trend) >= 2:
                             last = cust_trend.iloc[-1]
                             prev = cust_trend.iloc[-2]
@@ -355,7 +353,6 @@ elif st.session_state.current_page == 'pricing':
                             else:
                                 insight_list.append(f"📈 **利润扩张**：较前日增长 {margin_dir:.2f} 元/kg。")
                             
-                            # 2. 驱动因素分析
                             if cost_dir > 0 and price_dir < cost_dir:
                                 insight_list.append("🔴 **成本压力**：成本上涨幅度超过单价上涨幅度，是利润受损的主因。建议核查运输或采购成本。")
                             elif price_dir > 0 and cost_dir <= 0:
@@ -363,7 +360,6 @@ elif st.session_state.current_page == 'pricing':
                             elif cost_dir > 0 and price_dir > 0:
                                 insight_list.append("⚖️ **同步上涨**：单价与成本双双上涨，需关注是否还能继续提价。")
 
-                            # 3. 操作建议
                             if last['利润空间'] > 0.5:
                                 insight_list.append("✅ **操作建议**：当前盈利状况良好，建议维持合作关系，可适当放宽采购标准或增加采购量。")
                             elif last['利润空间'] > 0:
@@ -390,7 +386,7 @@ elif st.session_state.current_page == 'trend':
     st.info("功能维护中...")
 
 # ==========================================
-# 页面 D: 销售全景 (单一市场柱状图+智能总结 v31.0)
+# 页面 D: 销售全景 (体重柱状图优化版 v32.0)
 # ==========================================
 elif st.session_state.current_page == 'analysis':
     st.markdown("<div class='page-header'><h1>📊 销售全景中心</h1></div>", unsafe_allow_html=True)
@@ -404,7 +400,7 @@ elif st.session_state.current_page == 'analysis':
     
     df_raw = st.session_state['sales_df_raw'] if st.session_state['sales_df_raw'] is not None else None
     if df_raw is None:
-        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v31")
+        uploaded_files = st.file_uploader("上传明细", type=["xlsx", "xls"], accept_multiple_files=True, key="sales_v32")
         if uploaded_files:
             df_list = []
             for f in uploaded_files: temp = pd.read_excel(f); temp['来源文件'] = f.name; df_list.append(temp)
@@ -476,71 +472,76 @@ elif st.session_state.current_page == 'analysis':
                 for i, item in enumerate(sorted(alerts_down, key=lambda x: x['pct'])[:10], 1): st.markdown(f"**{i}. {item['屠宰场']}** ⬇️ **{abs(item['pct']):.1f}%**")
                 st.markdown("</div>", unsafe_allow_html=True)
 
-            # 2. 体重段分析
+            # 2. 体重段分析 (优化版)
             if not is_select_all and len(selected_markets) == 1:
                 st.markdown("#### ⚖️ 体重需求分析")
                 target_market = selected_markets[0]
                 df_single = df_view[df_view['屠宰场'] == target_market]
-                weight_trend = df_single.groupby(['日期', '体重段'])['总头数'].sum().reset_index()
-                fig_weight = px.bar(weight_trend, x='日期', y='总头数', color='体重段', barmode='group', title=f"{target_market} 每日体重段收购情况")
+                
+                # === 修改点 1: 强制按日期排序 ===
+                # 确保数据是按时间顺序排列的
+                df_single_sorted = df_single.sort_values(by='日期')
+                
+                weight_trend = df_single_sorted.groupby(['日期', '体重段'])['总头数'].sum().reset_index()
+                
+                # === 修改点 2: 使用堆叠柱状图 (Stack) 并强制 X 轴顺序 ===
+                fig_weight = px.bar(
+                    weight_trend, 
+                    x='日期', 
+                    y='总头数', 
+                    color='体重段',
+                    barmode='stack', # 堆叠模式，解决杂乱问题
+                    title=f"{target_market} 每日体重段收购趋势",
+                    labels={'总头数': '接收头数', '日期': '日期'},
+                    # 强制 X 轴按时间顺序显示
+                    category_orders={"日期": sorted(weight_trend['日期'].unique())}
+                )
+                
+                # 优化图表布局
+                fig_weight.update_layout(
+                    xaxis_title="日期",
+                    yaxis_title="接收头数",
+                    legend_title="体重段",
+                    hovermode="x unified"
+                )
+                
                 st.plotly_chart(fig_weight, use_container_width=True)
+                
                 if not weight_trend.empty:
                     top_weight = weight_trend.groupby('体重段')['总头数'].sum().idxmax()
                     st.markdown(f"<div class='insight-card'>💡 <b>需求洞察：</b>该屠宰场偏好 <b>{top_weight}</b>。</div>", unsafe_allow_html=True)
                 st.markdown("---")
 
-            # 3. 市场趋势 + 智能总结 (修改点)
+            # 3. 市场趋势 + 智能总结 (保持不变)
             st.markdown("#### 📊 市场趋势")
             stats = df_view.groupby('屠宰场')['总头数'].sum().reset_index().sort_values('总头数', ascending=False)
             top_10 = stats.head(10)
             st.plotly_chart(px.pie(top_10, values='总头数', names='屠宰场', hole=0.4), use_container_width=True)
             
-            # === 修改逻辑：单一市场使用柱状图 ===
             if not is_select_all and len(selected_markets) == 1:
-                # 单一市场：柱状图
                 daily_trend = df_view.groupby('日期')['总头数'].sum().reset_index()
                 fig_trend = px.bar(daily_trend, x='日期', y='总头数', title="每日接收量趋势", text_auto=True)
                 st.plotly_chart(fig_trend, use_container_width=True)
-                
-                # === 新增：单一市场智能总结 ===
                 st.markdown("#### 📥 单一市场智能总结")
                 single_insights = []
-                
                 if len(daily_trend) >= 2:
                     last_day = daily_trend.iloc[-1]
                     prev_day = daily_trend.iloc[-2]
                     change = last_day['总头数'] - prev_day['总头数']
                     pct = (change / prev_day['总头数'] * 100) if prev_day['总头数'] > 0 else 0
-                    
-                    # 1. 环比变化
-                    if change > 0:
-                        single_insights.append(f"📈 **环比上升**：昨日接收 {int(last_day['总头数'])} 头，较前日增加 {int(change)} 头 (+{pct:.1f}%)。")
-                    elif change < 0:
-                        single_insights.append(f"📉 **环比下降**：昨日接收 {int(last_day['总头数'])} 头，较前日减少 {int(abs(change))} 头 ({pct:.1f}%)。")
-                    else:
-                        single_insights.append(f"⚖️ **持平**：昨日与前日接收量持平，均为 {int(last_day['总头数'])} 头。")
-                    
-                    # 2. 峰值与均值
+                    if change > 0: single_insights.append(f"📈 **环比上升**：昨日接收 {int(last_day['总头数'])} 头，较前日增加 {int(change)} 头 (+{pct:.1f}%)。")
+                    elif change < 0: single_insights.append(f"📉 **环比下降**：昨日接收 {int(last_day['总头数'])} 头，较前日减少 {int(abs(change))} 头 ({pct:.1f}%)。")
+                    else: single_insights.append(f"⚖️ **持平**：昨日与前日接收量持平，均为 {int(last_day['总头数'])} 头。")
                     max_vol = daily_trend['总头数'].max()
                     max_date = daily_trend.loc[daily_trend['总头数'].idxmax(), '日期']
                     avg_vol = daily_trend['总头数'].mean()
-                    
                     single_insights.append(f"📊 **历史峰值**：最高单日 {int(max_vol)} 头 (日期: {max_date})。")
                     single_insights.append(f"📉 **平均负荷**：统计期内日均 {int(avg_vol)} 头。")
-                    
-                    # 3. 风险/机会提示
-                    if last_day['总头数'] < avg_vol * 0.7:
-                        single_insights.append("⚠️ **风险提示**：昨日销量显著低于平均水平，需关注该市场是否出现需求疲软或竞争加剧。")
-                    elif last_day['总头数'] > avg_vol * 1.3:
-                        single_insights.append("🚀 **机会窗口**：昨日销量显著高于平均，该市场目前处于需求高峰期，建议优先保障猪源供应。")
-                
-                if single_insights:
-                    st.markdown(f"<div class='insight-card'>{'<br>'.join(single_insights)}</div>", unsafe_allow_html=True)
-                else:
-                    st.info("数据积累不足，暂无总结。")
-
+                    if last_day['总头数'] < avg_vol * 0.7: single_insights.append("⚠️ **风险提示**：昨日销量显著低于平均水平，需关注该市场是否出现需求疲软或竞争加剧。")
+                    elif last_day['总头数'] > avg_vol * 1.3: single_insights.append("🚀 **机会窗口**：昨日销量显著高于平均，该市场目前处于需求高峰期，建议优先保障猪源供应。")
+                if single_insights: st.markdown(f"<div class='insight-card'>{'<br>'.join(single_insights)}</div>", unsafe_allow_html=True)
+                else: st.info("数据积累不足。")
             else:
-                # 多市场：折线图
                 line_data = df_view[df_view['屠宰场'].isin(top_10['屠宰场'].tolist())].groupby(['日期', '屠宰场'])['总头数'].sum().reset_index()
                 fig_line = px.line(line_data, x='日期', y='总头数', color='屠宰场', markers=True)
                 st.plotly_chart(fig_line, use_container_width=True)
@@ -552,49 +553,34 @@ elif st.session_state.current_page == 'analysis':
                 total_vol = stats['总头数'].sum()
                 top3_vol = stats.head(3)['总头数'].sum()
                 cr3 = (top3_vol / total_vol * 100) if total_vol > 0 else 0
-                if cr3 > 70:
-                    insights.append(f"🔹 **市场集中度极高 (CR3={cr3:.1f}%)**：前三名客户占据主导地位。建议作为VIP重点维护。")
-                elif cr3 < 40:
-                    insights.append(f"🔹 **市场分散 (CR3={cr3:.1f}%)**：客户分布均匀，尚未形成绝对核心。建议寻找增长点。")
-                else:
-                    insights.append(f"🔹 **市场结构均衡 (CR3={cr3:.1f}%)**：既有核心支撑，又有广泛基础。")
-            
+                if cr3 > 70: insights.append(f"🔹 **市场集中度极高 (CR3={cr3:.1f}%)**")
+                elif cr3 < 40: insights.append(f"🔹 **市场分散 (CR3={cr3:.1f}%)**")
+                else: insights.append(f"🔹 **市场结构均衡 (CR3={cr3:.1f}%)**")
             if len(dates) >= 7:
                 first_half = df_view[df_view['日期'].isin(dates[:3])]['总头数'].sum()
                 second_half = df_view[df_view['日期'].isin(dates[-3:])]['总头数'].sum()
                 growth = (second_half - first_half) / first_half * 100 if first_half > 0 else 0
-                if growth > 10: insights.append(f"🚀 **强劲增长**：近期销量较初期增长 **{growth:.1f}%**。")
-                elif growth < -10: insights.append(f"📉 **下滑预警**：近期销量较初期下滑 **{abs(growth):.1f}%**。")
-                else: insights.append(f"⚖️ **平稳运行**：波动在 ±10% 以内。")
-
-            if alerts_up: insights.append(f"🎯 **机会窗口**：有 **{len(alerts_up)}** 个市场连续上涨。")
-            if alerts_down: insights.append(f"🛡️ **风险提示**：有 **{len(alerts_down)}** 个市场连续下跌。")
-                
+                if growth > 10: insights.append(f"🚀 **强劲增长** (+{growth:.1f}%)")
+                elif growth < -10: insights.append(f"📉 **下滑预警** ({abs(growth):.1f}%)")
+                else: insights.append(f"⚖️ **平稳运行**")
+            if alerts_up: insights.append(f"🎯 **机会窗口**：{len(alerts_up)} 个市场连涨")
+            if alerts_down: insights.append(f"🛡️ **风险提示**：{len(alerts_down)} 个市场连跌")
             if insights: st.markdown(f"<div class='insight-card'>{'<br>'.join(insights)}</div>", unsafe_allow_html=True)
-            else: st.info("数据积累不足。")
+            else: st.info("数据不足。")
             st.markdown("---")
 
-            # 4. 重点客户画像 (修复版)
+            # 4. 重点客户画像 (保持不变)
             st.markdown("#### 🤝 重点客户画像")
             df_mid_view = df_view[df_view['采购类型'] == '中间商']
             if not df_mid_view.empty:
                 all_mid = df[df['采购类型'] == '中间商']
-                cust_stats = all_mid.groupby('客户姓名').agg(
-                    总头数=('总头数', 'sum'), 出现天数=('日期', 'nunique'), 
-                    平均单价=('单价', 'mean'),
-                    客户分类=('客户分类', 'first'),
-                    主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'),
-                    最小运距=('运距', 'min'), 最大运距=('运距', 'max')
-                ).reset_index()
+                cust_stats = all_mid.groupby('客户姓名').agg(总头数=('总头数', 'sum'), 出现天数=('日期', 'nunique'), 平均单价=('单价', 'mean'), 客户分类=('客户分类', 'first'), 主要流向=('屠宰场', lambda x: x.mode()[0] if not x.mode().empty else '未知'), 最小运距=('运距', 'min'), 最大运距=('运距', 'max')).reset_index()
                 cust_stats['运距区间'] = cust_stats.apply(lambda x: f"{x['最小运距']:.0f}-{x['最大运距']:.0f}km", axis=1)
-                
                 active_customers = df_mid_view['客户姓名'].unique()
                 cust_stats_active = cust_stats[cust_stats['客户姓名'].isin(active_customers)]
                 top_cust_list = cust_stats_active.nlargest(20, '总头数')['客户姓名'].tolist()
                 df_focus = cust_stats_active[cust_stats_active['客户姓名'].isin(top_cust_list)]
-                
                 tab_pub, tab_pri, tab_comp = st.tabs(["🏢 公户", "👤 个人户", "📊 客户调运对比"])
-                
                 with tab_pub:
                     pub_data = df_focus[df_focus['客户分类'] == '🏢 公户'].nlargest(10, '总头数')
                     if not pub_data.empty:
@@ -602,7 +588,6 @@ elif st.session_state.current_page == 'analysis':
                         if has_price: disp_cols.insert(3, '平均单价')
                         st.dataframe(pub_data[disp_cols], hide_index=True)
                     else: st.info("暂无公户")
-                
                 with tab_pri:
                     pri_data = df_focus[df_focus['客户分类'] == '👤 个人户'].nlargest(10, '总头数')
                     if not pri_data.empty:
@@ -610,7 +595,6 @@ elif st.session_state.current_page == 'analysis':
                         if has_price: disp_cols.insert(3, '平均单价')
                         st.dataframe(pri_data[disp_cols], hide_index=True)
                     else: st.info("暂无个人户")
-
                 with tab_comp:
                     st.markdown("**📈 核心客户每日调运对比**")
                     compare_cust = st.multiselect("选择对比客户", top_cust_list, default=top_cust_list[:2], key="comp_cust_sel")
@@ -622,7 +606,6 @@ elif st.session_state.current_page == 'analysis':
                         comp_weight = df_comp.groupby(['日期', '客户姓名', '体重段'])['总头数'].sum().reset_index()
                         fig_comp_w = px.bar(comp_weight, x='日期', y='总头数', color='体重段', facet_col='客户姓名', title="每日收购体重结构")
                         st.plotly_chart(fig_comp_w, use_container_width=True)
-
                 with st.expander("🔍 查看单人详细画像"):
                     sel_name = st.selectbox("选择客户", top_cust_list)
                     if sel_name:
